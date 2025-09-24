@@ -1,0 +1,14 @@
+bootJar {
+    enabled = true
+    archiveBaseName = 'reservation-batch'
+}
+
+jar {
+    enabled = false
+}
+
+dependencies {
+    implementation project(':reservation-common')
+
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+}

@@ -1,0 +1,14 @@
+bootJar {
+    enabled = true
+    archiveBaseName = 'reservation-api'
+}
+
+jar {
+    enabled = false
+}
+
+dependencies {
+    implementation project(':reservation-common')
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+}
