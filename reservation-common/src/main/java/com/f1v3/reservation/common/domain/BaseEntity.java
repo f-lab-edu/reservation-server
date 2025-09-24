@@ -1,4 +1,4 @@
-package com.f1v3.reservation.common;
+package com.f1v3.reservation.common.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
