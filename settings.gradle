@@ -1,0 +1,14 @@
+pluginManagement {
+    plugins {
+        id 'org.springframework.boot' version "${springBootVersion}"
+        id 'io.spring.dependency-management' version "${springDependencyManagementVersion}"
+    }
+}
+
+rootProject.name = 'reservation'
+
+include 'reservation-admin-api'
+include 'reservation-common'
+include 'reservation-api'
+include 'reservation-batch'
+include 'reservation-supplier-api'
