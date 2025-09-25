@@ -14,7 +14,8 @@ public enum TermCode {
     TERM_PRIVACY("개인정보 처리방침"),
     TERM_MARKETING("마케팅 수신 동의"),
     TERM_AGE("만 14세 이상 동의"),
-    TERM_OF_PERSONAL_INFORMATION("개인정보 수집 및 이용 동의")
+    TERM_INFO("개인정보 수집 및 이용 동의"),
+    TERM_LOCATION("위치 정보 동의"),
     ;
 
     private final String description;
