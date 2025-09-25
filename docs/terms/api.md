@@ -57,41 +57,62 @@ REQUEST:
 N/A
 
 RESPONSE:
-{
-    "terms": [
-        {
-            "termId": 1,
-            "termCode": "TERM_OF_SERVICE",
-            "title": "이용약관",
-            "type": "REQUIRED",
-            "displayOrder": 1,
-            "isActive": true,
-            "createdAt": "2025-09-01T12:34:56",
-            "updatedAt": "2025-09-10T12:34:56",
-            "versions": [
-                {
-                    "termVersionId": 101,
-                    "version": 1,
-                    "isCurrent": false,
-                    "effectiveDate": "2025-09-01T00:00:00",
-                    "expiryDate": "2025-09-10T23:59:59",
-                    "createdAt": "2025-09-01T00:00:00",
-                    "updatedAt": "2025-09-01T12:34:56"
-                },
-                {
-                    "termVersionId": 102,
-                    "version": 2,
-                    "isCurrent": true,
-                    "effectiveDate": "2025-09-11T00:00:00",
-                    "expiryDate": null,
-                    "createdAt": "2025-09-10T12:34:56",
-                    "updatedAt": "2025-09-10T12:34:56"
-                }
-            ]
-        },
-        // ...
-    ]
-}
+[
+  {
+    "termId": 2,
+    "termCode": "TERM_PRIVACY",
+    "title": "개인정보 처리방침",
+    "type": "REQUIRED",
+    "displayOrder": 101,
+    "status": "ACTIVE",
+    "createdAt": "2025-09-25T05:32:21",
+    "updatedAt": "2025-09-25T05:32:21",
+    "termVersionId": 5,
+    "version": 3,
+    "isCurrent": true,
+    "content": "개인정보 처리방침에 따라.. (최신 버전)",
+    "effectiveDateTime": "2025-09-25T05:32:22",
+    "expiryDateTime": null,
+    "termVersionCreatedAt": "2025-09-25T05:32:22",
+    "termVersionUpdatedAt": "2025-09-25T05:32:22"
+  },
+  {
+    "termId": 1,
+    "termCode": "TERM_SERVICE",
+    "title": "서비스 이용 약관",
+    "type": "REQUIRED",
+    "displayOrder": 100,
+    "status": "ACTIVE",
+    "createdAt": "2025-09-25T05:32:21",
+    "updatedAt": "2025-09-25T05:32:21",
+    "termVersionId": 2,
+    "version": 2,
+    "isCurrent": true,
+    "content": "본 서비스 이용 동의.. (최신 버전)",
+    "effectiveDateTime": "2025-09-25T05:32:22",
+    "expiryDateTime": null,
+    "termVersionCreatedAt": "2025-09-25T05:32:22",
+    "termVersionUpdatedAt": "2025-09-25T05:32:22"
+  },
+  {
+    "termId": 1,
+    "termCode": "TERM_SERVICE",
+    "title": "서비스 이용 약관",
+    "type": "REQUIRED",
+    "displayOrder": 100,
+    "status": "ACTIVE",
+    "createdAt": "2025-09-25T05:32:21",
+    "updatedAt": "2025-09-25T05:32:21",
+    "termVersionId": 1,
+    "version": 1,
+    "isCurrent": false,
+    "content": "본 서비스 이용 동의..",
+    "effectiveDateTime": "2025-09-25T05:32:22",
+    "expiryDateTime": null,
+    "termVersionCreatedAt": "2025-09-25T05:32:22",
+    "termVersionUpdatedAt": "2025-09-25T05:32:22"
+  }
+]
 ```
 
 ## 3. 약관 생성 API (관리자용)
