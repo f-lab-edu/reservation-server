@@ -7,6 +7,7 @@ import com.f1v3.reservation.common.domain.term.enums.TermType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
  *
  * @author Seungjo, Jeong
  */
+@Getter
 @Entity
 @Table(name = "terms")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

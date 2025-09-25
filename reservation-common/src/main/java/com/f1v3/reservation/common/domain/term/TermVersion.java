@@ -4,6 +4,7 @@ import com.f1v3.reservation.common.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
  *
  * @author Seungjo, Jeong
  */
+@Getter
 @Entity
 @Table(name = "term_versions")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
