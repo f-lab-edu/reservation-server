@@ -1,6 +1,8 @@
 package com.f1v3.reservation.common.domain.term.repository;
 
+import com.f1v3.reservation.common.domain.term.dto.AdminTermDto;
 import com.f1v3.reservation.common.domain.term.dto.CurrentTermDto;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.NoRepositoryBean;
 
 import java.util.List;
@@ -13,4 +15,6 @@ import java.util.List;
 @NoRepositoryBean
 public interface TermRepositoryCustom {
     List<CurrentTermDto> getActiveTermsWithVersion();
+
+    List<AdminTermDto> getPagedTerms(Pageable pageable);
 }
