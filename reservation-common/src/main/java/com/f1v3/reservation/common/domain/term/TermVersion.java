@@ -37,10 +37,10 @@ public class TermVersion extends BaseEntity {
     @Column(nullable = false)
     private Boolean isCurrent;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDateTime effectiveDateTime;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDateTime expiryDateTime;
 
     @Builder
