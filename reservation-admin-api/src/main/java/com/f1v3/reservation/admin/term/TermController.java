@@ -23,6 +23,11 @@ public class TermController {
 
     private final TermService termService;
 
+    /**
+     * 약관 리스트 조회 (페이지네이션 적용)
+     *
+     * @param pageable default page = 0, size = 10
+     */
     @GetMapping
     public ResponseEntity<List<TermResponse>> getPagedTerms(@PageableDefault Pageable pageable) {
         return ResponseEntity.ok(termService.getPagedTerms(pageable));
