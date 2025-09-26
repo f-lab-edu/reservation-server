@@ -1,7 +1,13 @@
 package com.f1v3.reservation.admin.term;
 
+import com.f1v3.reservation.admin.term.dto.CreateTermRequest;
+import com.f1v3.reservation.admin.term.dto.CreateTermResponse;
 import com.f1v3.reservation.admin.term.dto.TermResponse;
+import com.f1v3.reservation.common.domain.term.Term;
 import com.f1v3.reservation.common.domain.term.dto.AdminTermDto;
+import com.f1v3.reservation.common.domain.term.enums.TermCode;
+import com.f1v3.reservation.common.domain.term.enums.TermStatus;
+import com.f1v3.reservation.common.domain.term.enums.TermType;
 import com.f1v3.reservation.common.domain.term.repository.TermRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -26,5 +32,20 @@ public class TermService {
         return pagedTerms.stream()
                 .map(TermResponse::from)
                 .toList();
+    }
+
+    public CreateTermResponse create(CreateTermRequest request) {
+
+        Term term = Term.builder()
+                .code(TermCode.valueOf(request.getCode()))
+                .title(request.getTitle())
+                .type(TermType.valueOf(request.getType()))
+                .displayOrder(request.getDisplayOrder())
+                .status(TermStatus.valueOf(request.getStatus()))
+                .build();
+
+        Term savedTerm = termRepository.save(term);
+
+        return new CreateTermResponse(savedTerm.getId());
     }
 }
