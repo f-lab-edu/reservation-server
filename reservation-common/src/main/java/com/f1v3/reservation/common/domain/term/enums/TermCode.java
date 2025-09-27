@@ -16,6 +16,9 @@ public enum TermCode {
     TERM_AGE("만 14세 이상 동의"),
     TERM_INFO("개인정보 수집 및 이용 동의"),
     TERM_LOCATION("위치 정보 동의"),
+
+    // todo: 테스트용이므로 추후에 제거 필요 !!
+    TERM_TEST("테스트 약관"),
     ;
 
     private final String description;
