@@ -12,6 +12,7 @@ import com.f1v3.reservation.common.domain.term.repository.TermRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -26,6 +27,7 @@ public class TermService {
 
     private final TermRepository termRepository;
 
+    @Transactional(readOnly = true)
     public List<TermResponse> getPagedTerms(Pageable pageable) {
         List<AdminTermDto> pagedTerms = termRepository.getPagedTerms(pageable);
 
@@ -34,6 +36,7 @@ public class TermService {
                 .toList();
     }
 
+    @Transactional
     public CreateTermResponse create(CreateTermRequest request) {
 
         Term term = Term.builder()

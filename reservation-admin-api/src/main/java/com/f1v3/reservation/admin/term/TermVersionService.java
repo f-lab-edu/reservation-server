@@ -8,6 +8,7 @@ import com.f1v3.reservation.common.domain.term.repository.TermRepository;
 import com.f1v3.reservation.common.domain.term.repository.TermVersionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * {class name}.
@@ -21,6 +22,7 @@ public class TermVersionService {
     private final TermRepository termRepository;
     private final TermVersionRepository termVersionRepository;
 
+    @Transactional
     public CreateTermVersionResponse create(Long termId, CreateTermVersionRequest request) {
 
         Term term = termRepository.findById(termId)
