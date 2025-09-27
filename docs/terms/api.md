@@ -126,7 +126,7 @@ REQUEST:
     "title": "마케팅 수신 동의",
     "type": "REQUIRED" | "OPTIONAL",
     "displayOrder": 4,
-    "isActive": true,
+    "status": "ACTIVE" | "INACTIVE",
     "version": 1,
     "content": "새로운 약관 내용...",
     "effectiveDate": "2025-09-20T00:00:00",
