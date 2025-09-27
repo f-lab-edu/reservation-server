@@ -6,34 +6,28 @@ import com.f1v3.reservation.common.domain.term.enums.TermType;
 import com.f1v3.reservation.common.validator.EnumValid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 /**
  * 약관 생성 요청 DTO
  *
  * @author Seungjo, Jeong
  */
-@Getter
-@AllArgsConstructor
-public class CreateTermRequest {
+public record CreateTermRequest(
+        @EnumValid(enumClass = TermCode.class)
+        @NotBlank
+        String code,
 
-    @NotBlank
-    @EnumValid(enumClass = TermCode.class)
-    private final String code;
+        @NotBlank
+        String title,
 
-    @NotBlank
-    private final String title;
+        @EnumValid(enumClass = TermType.class)
+        @NotBlank String type,
 
-    @NotBlank
-    @EnumValid(enumClass = TermType.class)
-    private final String type;
+        @Min(1)
+        int displayOrder,
 
-    @Min(1)
-    private final int displayOrder;
-
-    @NotBlank
-    @EnumValid(enumClass = TermStatus.class)
-    private final String status;
-
+        @EnumValid(enumClass = TermStatus.class)
+        @NotBlank
+        String status
+) {
 }

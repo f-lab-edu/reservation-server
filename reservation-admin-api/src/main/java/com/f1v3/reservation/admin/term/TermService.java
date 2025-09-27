@@ -37,11 +37,11 @@ public class TermService {
     public CreateTermResponse create(CreateTermRequest request) {
 
         Term term = Term.builder()
-                .code(TermCode.valueOf(request.getCode()))
-                .title(request.getTitle())
-                .type(TermType.valueOf(request.getType()))
-                .displayOrder(request.getDisplayOrder())
-                .status(TermStatus.valueOf(request.getStatus()))
+                .code(TermCode.valueOf(request.code()))
+                .title(request.title())
+                .type(TermType.valueOf(request.type()))
+                .displayOrder(request.displayOrder())
+                .status(TermStatus.valueOf(request.status()))
                 .build();
 
         Term savedTerm = termRepository.save(term);
