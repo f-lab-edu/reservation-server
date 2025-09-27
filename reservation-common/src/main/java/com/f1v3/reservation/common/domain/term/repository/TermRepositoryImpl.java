@@ -72,8 +72,8 @@ public class TermRepositoryImpl implements TermRepositoryCustom {
                                 termVersion.updatedAt
                         ))
                 .from(term)
-                .join(termVersion).on(termVersion.term.eq(term))
-                .orderBy(termVersion.id.desc())
+                .leftJoin(termVersion).on(termVersion.term.eq(term))
+                .orderBy(term.id.desc(), termVersion.id.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
