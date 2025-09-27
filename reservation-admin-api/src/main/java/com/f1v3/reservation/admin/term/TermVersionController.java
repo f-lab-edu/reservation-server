@@ -21,7 +21,7 @@ public class TermVersionController {
     private final TermVersionService termVersionService;
 
     @PostMapping
-    public ResponseEntity<CreateTermVersionResponse> createTermVersion(@PathVariable Long termId,
+    public ResponseEntity<CreateTermVersionResponse> createTermVersion(@PathVariable long termId,
                                                                        @Valid @RequestBody CreateTermVersionRequest request) {
 
         CreateTermVersionResponse response = termVersionService.create(termId, request);
