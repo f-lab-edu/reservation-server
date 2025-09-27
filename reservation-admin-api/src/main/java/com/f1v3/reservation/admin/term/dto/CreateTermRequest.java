@@ -14,20 +14,21 @@ import jakarta.validation.constraints.NotBlank;
  */
 public record CreateTermRequest(
         @EnumValid(enumClass = TermCode.class)
-        @NotBlank
+        @NotBlank(message = "약관 코드를 입력해주세요.")
         String code,
 
-        @NotBlank
+        @NotBlank(message = "약관 제목을 입력해주세요.")
         String title,
 
         @EnumValid(enumClass = TermType.class)
-        @NotBlank String type,
+        @NotBlank(message = "약관 유형(REQUIRED/OPTIONAL)을 입력해주세요.")
+        String type,
 
-        @Min(1)
+        @Min(value = 1, message = "표시 순서는 1 이상의 값으로 설정해주세요. (ASCENDING)")
         int displayOrder,
 
         @EnumValid(enumClass = TermStatus.class)
-        @NotBlank
+        @NotBlank(message = "약관의 상태(ACTIVE/INACTIVE)를 입력해주세요.")
         String status
 ) {
 }
