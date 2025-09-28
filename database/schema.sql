@@ -56,3 +56,35 @@ CREATE TABLE phone_verifications
     INDEX idx_phone_number_code (phone_number, verification_code)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
+
+DROP TABLE IF EXISTS user_term_agreements;
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users
+(
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_password VARCHAR(60)  NOT NULL,
+    email         VARCHAR(255) NOT NULL UNIQUE,
+    nickname      VARCHAR(50)  NOT NULL,
+    phone_number  VARCHAR(20)  NOT NULL UNIQUE,
+    birth_date    DATE         NOT NULL,
+    gender        VARCHAR(5)      NOT NULL, # ENUM ('M', 'F')
+    role          VARCHAR(20)  NOT NULL, # ENUM ('USER', 'SUPPLIER', 'ADMIN')
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE user_term_agreements
+(
+    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id         BIGINT NOT NULL,
+    term_id         BIGINT NOT NULL,
+    term_version_id BIGINT NOT NULL,
+    agreed_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (term_id) REFERENCES terms (id),
+    FOREIGN KEY (term_version_id) REFERENCES term_versions (id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
