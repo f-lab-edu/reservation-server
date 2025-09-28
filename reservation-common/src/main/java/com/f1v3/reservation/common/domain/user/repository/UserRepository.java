@@ -9,4 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @author Seungjo, Jeong
  */
 public interface UserRepository extends JpaRepository<User, Long> {
+
+    boolean existsByEmail(String email);
+
+    boolean existsByPhoneNumber(String phoneNumber);
 }
