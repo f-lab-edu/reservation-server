@@ -2,6 +2,7 @@ package com.f1v3.reservation.api.phoneverification;
 
 import com.f1v3.reservation.api.phoneverification.dto.SendPhoneVerificationRequest;
 import com.f1v3.reservation.api.phoneverification.dto.SendPhoneVerificationResponse;
+import com.f1v3.reservation.api.phoneverification.dto.VerifyPhoneVerificationRequest;
 import com.f1v3.reservation.api.phoneverification.sms.SmsProvider;
 import com.f1v3.reservation.common.domain.phoneverification.PhoneVerification;
 import com.f1v3.reservation.common.domain.phoneverification.repository.PhoneVerificationRepository;
@@ -45,6 +46,28 @@ public class PhoneVerificationService {
         return new SendPhoneVerificationResponse(savedVerification.getExpiredAt());
     }
 
+
+    @Transactional
+    public void verifyCode(VerifyPhoneVerificationRequest request) {
+
+        PhoneVerification verification = phoneVerificationRepository.findLatestByPhoneNumber(request.phoneNumber())
+                .orElseThrow(() -> new IllegalArgumentException("인증 요청이 존재하지 않습니다."));
+
+        verification.verify(request.verificationCode());
+        validateUserRegistration(request.phoneNumber());
+    }
+
+    /**
+     * 이미 해당 번호로 회원이 가입했는지 검증
+     */
+    private void validateUserRegistration(String phoneNumber) {
+        // todo: 회원 테이블에서 핸드폰 번호가 중복되는 회원이 존재하는지 검증하는 로직 추가 필요
+        // userRepository.existsByPhoneNumber(request.phoneNumber());
+    }
+
+    /**
+     * SMS 메시지 생성
+     */
     private String createSmsMessage(String verificationCode) {
         return String.format("[예약 시스템] 인증번호 [%s]를 입력해주세요.", verificationCode);
     }

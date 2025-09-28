@@ -2,6 +2,7 @@ package com.f1v3.reservation.api.phoneverification;
 
 import com.f1v3.reservation.api.phoneverification.dto.SendPhoneVerificationRequest;
 import com.f1v3.reservation.api.phoneverification.dto.SendPhoneVerificationResponse;
+import com.f1v3.reservation.api.phoneverification.dto.VerifyPhoneVerificationRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,5 +29,11 @@ public class PhoneVerificationController {
 
         SendPhoneVerificationResponse response = phoneVerificationService.sendVerifyCode(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<Void> verifyCode(@Valid @RequestBody VerifyPhoneVerificationRequest request) {
+        phoneVerificationService.verifyCode(request);
+        return ResponseEntity.ok().build();
     }
 }
