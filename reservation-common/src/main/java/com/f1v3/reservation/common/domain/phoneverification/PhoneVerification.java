@@ -20,6 +20,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PhoneVerification extends BaseEntity {
 
+    private static final int MAX_ATTEMPT = 3;
+    private static final int VERIFICATION_EXPIRY_MINUTES = 3;
+    private static final int VERIFIED_DURATION_MINUTES = 10;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -48,7 +52,7 @@ public class PhoneVerification extends BaseEntity {
         this.verificationCode = verificationCode;
         this.attemptCount = 0;
         this.isVerified = false;
-        this.expiredAt = LocalDateTime.now().plusMinutes(3); // fixme: 생성 시점에서 3분??
+        this.expiredAt = LocalDateTime.now().plusMinutes(VERIFICATION_EXPIRY_MINUTES);
     }
 
     public void verify(String code) {
@@ -59,7 +63,7 @@ public class PhoneVerification extends BaseEntity {
     }
 
     private void incrementAttempt() {
-        if (this.attemptCount >= 3) {
+        if (this.attemptCount >= MAX_ATTEMPT) {
             throw new IllegalStateException("최대 시도 횟수를 초과했습니다.");
         }
         this.attemptCount += 1;
@@ -71,8 +75,7 @@ public class PhoneVerification extends BaseEntity {
         }
     }
 
-    // 쿼리 호출 시점에서 필터링하는 방식으로 접근
-    private boolean isExpired() {
-        return LocalDateTime.now().isAfter(expiredAt);
+    public boolean isExpiredForVerifiedDuration() {
+        return LocalDateTime.now().isAfter(verifiedAt.plusMinutes(VERIFIED_DURATION_MINUTES));
     }
 }
