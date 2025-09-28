@@ -39,6 +39,9 @@ public class PhoneVerification extends BaseEntity {
     @Column(nullable = false)
     private LocalDateTime expiredAt;
 
+    @Column(nullable = true)
+    private LocalDateTime verifiedAt;
+
     @Builder
     public PhoneVerification(String phoneNumber, String verificationCode) {
         this.phoneNumber = phoneNumber;
@@ -48,15 +51,28 @@ public class PhoneVerification extends BaseEntity {
         this.expiredAt = LocalDateTime.now().plusMinutes(3); // fixme: 생성 시점에서 3분??
     }
 
-    public void incrementAttempt() {
+    public void verify(String code) {
+        incrementAttempt();
+        validateCode(code);
+        this.isVerified = true;
+        this.verifiedAt = LocalDateTime.now();
+    }
+
+    private void incrementAttempt() {
         if (this.attemptCount >= 3) {
             throw new IllegalStateException("최대 시도 횟수를 초과했습니다.");
         }
-
         this.attemptCount += 1;
     }
 
-    public void verify() {
-        this.isVerified = true;
+    private void validateCode(String code) {
+        if (!this.verificationCode.equals(code)) {
+            throw new IllegalArgumentException("인증 코드가 일치하지 않습니다.");
+        }
+    }
+
+    // 쿼리 호출 시점에서 필터링하는 방식으로 접근
+    private boolean isExpired() {
+        return LocalDateTime.now().isAfter(expiredAt);
     }
 }
