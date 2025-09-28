@@ -4,6 +4,7 @@ import com.f1v3.reservation.api.phoneverification.dto.SendPhoneVerificationReque
 import com.f1v3.reservation.api.phoneverification.dto.SendPhoneVerificationResponse;
 import com.f1v3.reservation.api.phoneverification.dto.VerifyPhoneVerificationRequest;
 import com.f1v3.reservation.api.phoneverification.sms.SmsProvider;
+import com.f1v3.reservation.api.user.UserValidationService;
 import com.f1v3.reservation.common.domain.phoneverification.PhoneVerification;
 import com.f1v3.reservation.common.domain.phoneverification.repository.PhoneVerificationRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class PhoneVerificationService {
 
     private final PhoneVerificationRepository phoneVerificationRepository;
     private final SmsProvider smsProvider;
+    private final UserValidationService userValidationService;
 
     private static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
 
@@ -38,6 +40,7 @@ public class PhoneVerificationService {
                 .verificationCode(verificationCode)
                 .build();
 
+        // todo: SMS 발송 로직은 트랜잭션에서 분리하는 것이 좋음
         String message = createSmsMessage(verificationCode);
         smsProvider.send(request.phoneNumber(), message);
 
@@ -54,15 +57,17 @@ public class PhoneVerificationService {
                 .orElseThrow(() -> new IllegalArgumentException("인증 요청이 존재하지 않습니다."));
 
         verification.verify(request.verificationCode());
-        validateUserRegistration(request.phoneNumber());
+        userValidationService.validatePhoneNumberDuplication(request.phoneNumber());
     }
 
-    /**
-     * 이미 해당 번호로 회원이 가입했는지 검증
-     */
-    private void validateUserRegistration(String phoneNumber) {
-        // todo: 회원 테이블에서 핸드폰 번호가 중복되는 회원이 존재하는지 검증하는 로직 추가 필요
-        // userRepository.existsByPhoneNumber(request.phoneNumber());
+    @Transactional(readOnly = true)
+    public void checkVerified(String phoneNumber) {
+        PhoneVerification verification = phoneVerificationRepository.findLatestVerifiedByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new IllegalStateException("핸드폰 인증 내역이 존재하지 않습니다."));
+
+        if (verification.isExpiredForVerifiedDuration()) {
+            throw new IllegalStateException("핸드폰 인증이 만료되었습니다. 다시 인증해주세요.");
+        }
     }
 
     /**
