@@ -36,3 +36,23 @@ CREATE TABLE term_versions
     FOREIGN KEY (term_id) REFERENCES terms (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
+
+desc term_versions;
+
+DROP TABLE IF EXISTS phone_verifications;
+
+CREATE TABLE phone_verifications
+(
+    id                BIGINT PRIMARY KEY AUTO_INCREMENT,
+    phone_number      VARCHAR(20) NOT NULL,
+    verification_code VARCHAR(5)  NOT NULL,
+    attempt_count     INT         NOT NULL DEFAULT 0, # 인증 시도 횟수 (최대 3회 제한)
+    is_verified       BOOLEAN     NOT NULL DEFAULT FALSE,
+    expired_at        TIMESTAMP   NOT NULL,
+    verified_at       TIMESTAMP   NULL,
+    created_at        TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    INDEX idx_phone_number_code (phone_number, verification_code)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
