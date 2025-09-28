@@ -14,4 +14,6 @@ import java.util.Optional;
 public interface PhoneVerificationRepositoryCustom {
 
     Optional<PhoneVerification> findLatestByPhoneNumber(String phoneNumber);
+
+    Optional<PhoneVerification> findLatestVerifiedByPhoneNumber(String phoneNumber);
 }

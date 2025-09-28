@@ -31,4 +31,17 @@ public class PhoneVerificationRepositoryImpl implements PhoneVerificationReposit
                 .orderBy(phoneVerification.id.desc())
                 .fetchFirst());
     }
+
+    @Override
+    public Optional<PhoneVerification> findLatestVerifiedByPhoneNumber(String phoneNumber) {
+
+        return Optional.ofNullable(queryFactory
+                .select(phoneVerification)
+                .from(phoneVerification)
+                .where(phoneVerification.phoneNumber.eq(phoneNumber)
+                        .and(phoneVerification.isVerified.isTrue()))
+                .orderBy(phoneVerification.id.desc())
+                .fetchFirst()
+        );
+    }
 }
