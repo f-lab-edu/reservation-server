@@ -1,7 +1,7 @@
 package com.f1v3.reservation.api.term;
 
 import com.f1v3.reservation.api.term.dto.TermResponse;
-import com.f1v3.reservation.common.domain.term.dto.CurrentTermDto;
+import com.f1v3.reservation.common.domain.term.dto.ActiveTermDto;
 import com.f1v3.reservation.common.domain.term.repository.TermRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ public class TermService {
      */
     @Transactional(readOnly = true)
     public List<TermResponse> getActiveTerms() {
-        List<CurrentTermDto> activeTermsWithVersion = termRepository.getActiveTermsWithVersion();
+        List<ActiveTermDto> activeTermsWithVersion = termRepository.getActiveTerms();
 
         return activeTermsWithVersion.stream()
                 .map(TermResponse::from)

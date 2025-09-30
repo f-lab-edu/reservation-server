@@ -1,6 +1,7 @@
 package com.f1v3.reservation.api.term.dto;
 
-import com.f1v3.reservation.common.domain.term.dto.CurrentTermDto;
+import com.f1v3.reservation.common.domain.term.dto.ActiveTermDto;
+import com.f1v3.reservation.common.domain.term.enums.TermCode;
 import lombok.AccessLevel;
 import lombok.Builder;
 
@@ -12,22 +13,22 @@ import lombok.Builder;
 @Builder(access = AccessLevel.PRIVATE)
 public record TermResponse(
         Long termId,
-        String termCode,
+        TermCode termCode,
         Integer version,
         String title,
-        String type,
         String content,
+        Boolean isRequired,
         Integer displayOrder
 ) {
-    public static TermResponse from(CurrentTermDto term) {
+    public static TermResponse from(ActiveTermDto term) {
         return TermResponse.builder()
-                .termId(term.getTermId())
-                .termCode(term.getTermCode())
-                .version(term.getVersion())
-                .title(term.getTitle())
-                .type(term.getType())
-                .content(term.getContent())
-                .displayOrder(term.getDisplayOrder())
+                .termId(term.termId())
+                .termCode(term.termCode())
+                .version(term.version())
+                .title(term.title())
+                .content(term.content())
+                .isRequired(term.isRequired())
+                .displayOrder(term.displayOrder())
                 .build();
     }
 }
