@@ -1,15 +1,15 @@
 package com.f1v3.reservation.common.domain.term.repository;
 
 import com.f1v3.reservation.common.domain.term.QTerm;
-import com.f1v3.reservation.common.domain.term.QTermVersion;
+import com.f1v3.reservation.common.domain.term.dto.ActiveTermDto;
 import com.f1v3.reservation.common.domain.term.dto.AdminTermDto;
-import com.f1v3.reservation.common.domain.term.dto.CurrentTermDto;
-import com.f1v3.reservation.common.domain.term.enums.TermStatus;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -22,27 +22,23 @@ public class TermRepositoryImpl implements TermRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
     private final QTerm term = QTerm.term;
-    private final QTermVersion termVersion = QTermVersion.termVersion;
-
 
     @Override
-    public List<CurrentTermDto> getActiveTermsWithVersion() {
+    public List<ActiveTermDto> getActiveTerms() {
         return queryFactory
                 .select(
                         Projections.constructor(
-                                CurrentTermDto.class,
+                                ActiveTermDto.class,
                                 term.id,
                                 term.code,
+                                term.version,
                                 term.title,
-                                term.type,
-                                term.displayOrder,
-                                termVersion.version,
-                                termVersion.content))
+                                term.content,
+                                term.isRequired,
+                                term.displayOrder
+                        ))
                 .from(term)
-                .join(termVersion).on(termVersion.term.eq(term)
-                        .and(termVersion.isCurrent.isTrue()))
-                .where(term.status.eq(TermStatus.ACTIVE))
-                .orderBy(term.displayOrder.asc())
+                .where(isActive(LocalDateTime.now()))
                 .fetch();
     }
 
@@ -56,27 +52,28 @@ public class TermRepositoryImpl implements TermRepositoryCustom {
                                 AdminTermDto.class,
                                 term.id,
                                 term.code,
+                                term.version,
                                 term.title,
-                                term.type,
+                                term.content,
                                 term.displayOrder,
-                                term.status,
+                                term.isRequired,
+                                term.activatedAt,
+                                term.deactivatedAt,
                                 term.createdAt,
-                                term.updatedAt,
-                                termVersion.id,
-                                termVersion.version,
-                                termVersion.isCurrent,
-                                termVersion.content,
-                                termVersion.effectiveDateTime,
-                                termVersion.expiryDateTime,
-                                termVersion.createdAt,
-                                termVersion.updatedAt
-                        ))
+                                term.updatedAt))
                 .from(term)
-                .leftJoin(termVersion).on(termVersion.term.eq(term))
-                .orderBy(term.id.desc(), termVersion.id.desc())
+                .orderBy(term.id.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
+    }
+
+    /**
+     * 활성 시간 <= 시간 < 비활성 시간 or 비활성 시간이 null(제한 X)
+     */
+    private Predicate isActive(LocalDateTime time) {
+        return term.activatedAt.loe(time)
+                .and(term.deactivatedAt.gt(time).or(term.deactivatedAt.isNull()));
     }
 
 }
