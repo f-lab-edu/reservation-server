@@ -2,6 +2,10 @@ package com.f1v3.reservation.common.domain.term.enums;
 
 import lombok.Getter;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 /**
  * 약관 코드 ENUM
  *
@@ -22,8 +26,19 @@ public enum TermCode {
     ;
 
     private final String description;
+    private static final Map<String, TermCode> CODE_MAP = new HashMap<>();
+
+    static {
+        for (TermCode termCode : values()) {
+            CODE_MAP.put(termCode.name(), termCode);
+        }
+    }
 
     TermCode(String description) {
         this.description = description;
+    }
+
+    public static Optional<TermCode> getCode(String code) {
+        return Optional.ofNullable(CODE_MAP.get(code.trim().toUpperCase()));
     }
 }
