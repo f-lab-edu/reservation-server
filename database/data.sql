@@ -11,29 +11,19 @@ desc terms;
 #     TERM_INFO("개인정보 수집 및 이용 동의"),
 #     TERM_LOCATION("위치 정보 동의"),
 
-INSERT INTO terms (code, title, type, display_order, status)
-VALUES ('TERM_SERVICE', '서비스 이용 약관', 'REQUIRED', 100, 'ACTIVE'),
-       ('TERM_PRIVACY', '개인정보 처리방침', 'REQUIRED', 101, 'ACTIVE'),
-       ('TERM_AGE', '만 14세 이상 확인 약관', 'REQUIRED', 102, 'ACTIVE'),
-       ('TERM_MARKETING', '마케팅 정보 수신 동의 약관', 'OPTIONAL', 200, 'ACTIVE'),
-       ('TERM_INFO', '개인정보 수집 및 이용 약관', 'OPTIONAL', 201, 'ACTIVE'),
-       ('TERM_LOCATION', '위치 정보 이용 약관', 'OPTIONAL', 202, 'INACTIVE');
+-- 통합된 terms 테이블에 데이터 삽입
+INSERT INTO terms (code, version, title, content, is_required, display_order, activated_at, deactivated_at)
+VALUES
+('TERM_SERVICE', 1, '서비스 이용 약관', '본 서비스 이용 동의..', TRUE, 100, '2024-01-01 00:00:00', '2024-01-15 00:00:00'),
+('TERM_SERVICE', 2, '서비스 이용 약관', '본 서비스 이용 동의..', TRUE, 100, '2024-01-15 00:00:00', NULL),
+('TERM_PRIVACY', 1, '개인정보 처리방침', '개인정보 처리방침에 따라..', TRUE, 101, '2024-01-01 00:00:00', '2024-01-10 00:00:00'),
+('TERM_PRIVACY', 2, '개인정보 처리방침', '개인정보 처리방침에 따라..', TRUE, 101, '2024-01-10 00:00:00', '2024-01-20 00:00:00'),
+('TERM_PRIVACY', 3, '개인정보 처리방침', '개인정보 처리방침에 따라..', TRUE, 101, '2024-01-20 00:00:00', NULL),
+('TERM_AGE', 1, '만 14세 이상 확인 약관', '본 만 14세 이상 확인 약관 동의..', TRUE, 102, '2024-01-01 00:00:00', NULL),
 
-SELECT *
-FROM terms;
-
-desc term_versions;
-
-INSERT INTO term_versions (term_id, version, content, is_current, effective_date_time)
-VALUES (1, 1, '본 서비스 이용 동의..', false, NOW()),
-       (1, 2, '본 서비스 이용 동의..', true, NOW()),
-       (2, 1, '개인정보 처리방침에 따라..', false, NOW()),
-       (2, 2, '개인정보 처리방침에 따라..', false, NOW()),
-       (2, 3, '개인정보 처리방침에 따라..', true, NOW()),
-       (3, 1, '본 만 14세 이상 확인 약관 동의..', true, NOW()),
-       (4, 1, '본 마케팅 정보 수신 동의 약관 동의..', true, NOW()),
-       (5, 1, '본 개인정보 수집 및 이용 약관 동의..', true, NOW()),
-       (6, 1, '본 위치 정보 이용 약관 동의..', true, NOW());
+('TERM_MARKETING', 1, '마케팅 정보 수신 동의 약관', '본 마케팅 정보 수신 동의 약관 동의..', FALSE, 501, '2024-01-01 00:00:00', NULL),
+('TERM_INFO', 1, '개인정보 수집 및 이용 약관', '본 개인정보 수집 및 이용 약관 동의..', FALSE, 502, '2024-01-01 00:00:00', NULL),
+('TERM_LOCATION', 1, '위치 정보 이용 약관', '본 위치 정보 이용 약관 동의..', FALSE, 503, '2024-01-01 00:00:00', '2024-01-01 00:00:00');
 
 
 EXPLAIN

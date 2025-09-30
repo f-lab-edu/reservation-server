@@ -1,9 +1,9 @@
 package com.f1v3.reservation.admin.term.dto;
 
 import com.f1v3.reservation.common.domain.term.dto.AdminTermDto;
+import com.f1v3.reservation.common.domain.term.enums.TermCode;
 import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Getter;
 
 import java.time.LocalDateTime;
 
@@ -12,68 +12,34 @@ import java.time.LocalDateTime;
  *
  * @author Seungjo, Jeong
  */
-@Getter
-public class TermResponse {
+@Builder(access = AccessLevel.PRIVATE)
+public record TermResponse(
+        Long termId,
+        TermCode termCode,
+        Integer version,
+        String title,
+        String content,
+        Integer displayOrder,
+        Boolean isRequired,
+        LocalDateTime activatedAt,
+        LocalDateTime deactivatedAt,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 
-    // Term 정보
-    private final Long termId;
-    private final String termCode;
-    private final String title;
-    private final String type;
-    private final Integer displayOrder;
-    private final String status;
-    private final LocalDateTime createdAt;
-    private final LocalDateTime updatedAt;
-
-    // TermVersion 정보
-    private final Long termVersionId;
-    private final Integer version;
-    private final Boolean isCurrent;
-    private final String content;
-    private final LocalDateTime effectiveDateTime;
-    private final LocalDateTime expiryDateTime;
-    private final LocalDateTime termVersionCreatedAt;
-    private final LocalDateTime termVersionUpdatedAt;
-
-    @Builder(access = AccessLevel.PRIVATE)
-    private TermResponse(Long termId, String termCode, String title, String type, Integer displayOrder, String status, LocalDateTime createdAt, LocalDateTime updatedAt,
-                         Long termVersionId, Integer version, Boolean isCurrent, String content, LocalDateTime effectiveDateTime, LocalDateTime expiryDateTime, LocalDateTime termVersionCreatedAt, LocalDateTime termVersionUpdatedAt) {
-        this.termId = termId;
-        this.termCode = termCode;
-        this.title = title;
-        this.type = type;
-        this.displayOrder = displayOrder;
-        this.status = status;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.termVersionId = termVersionId;
-        this.version = version;
-        this.isCurrent = isCurrent;
-        this.content = content;
-        this.effectiveDateTime = effectiveDateTime;
-        this.expiryDateTime = expiryDateTime;
-        this.termVersionCreatedAt = termVersionCreatedAt;
-        this.termVersionUpdatedAt = termVersionUpdatedAt;
-    }
-
-    public static TermResponse from(AdminTermDto adminTermDto) {
+) {
+    public static TermResponse from(AdminTermDto termDto) {
         return TermResponse.builder()
-                .termId(adminTermDto.getTermId())
-                .termCode(adminTermDto.getTermCode())
-                .title(adminTermDto.getTitle())
-                .type(adminTermDto.getType())
-                .displayOrder(adminTermDto.getDisplayOrder())
-                .status(adminTermDto.getStatus())
-                .createdAt(adminTermDto.getCreatedAt())
-                .updatedAt(adminTermDto.getUpdatedAt())
-                .termVersionId(adminTermDto.getTermVersionId())
-                .version(adminTermDto.getVersion())
-                .isCurrent(adminTermDto.getIsCurrent())
-                .content(adminTermDto.getContent())
-                .effectiveDateTime(adminTermDto.getEffectiveDateTime())
-                .expiryDateTime(adminTermDto.getExpiryDateTime())
-                .termVersionCreatedAt(adminTermDto.getTermVersionCreatedAt())
-                .termVersionUpdatedAt(adminTermDto.getTermVersionUpdatedAt())
+                .termId(termDto.termId())
+                .termCode(termDto.termCode())
+                .version(termDto.version())
+                .title(termDto.title())
+                .content(termDto.content())
+                .displayOrder(termDto.displayOrder())
+                .isRequired(termDto.isRequired())
+                .activatedAt(termDto.activatedAt())
+                .deactivatedAt(termDto.deactivatedAt())
+                .createdAt(termDto.createdAt())
+                .updatedAt(termDto.updatedAt())
                 .build();
     }
 }

@@ -6,10 +6,10 @@ import com.f1v3.reservation.admin.term.dto.TermResponse;
 import com.f1v3.reservation.common.domain.term.Term;
 import com.f1v3.reservation.common.domain.term.dto.AdminTermDto;
 import com.f1v3.reservation.common.domain.term.enums.TermCode;
-import com.f1v3.reservation.common.domain.term.enums.TermStatus;
-import com.f1v3.reservation.common.domain.term.enums.TermType;
 import com.f1v3.reservation.common.domain.term.repository.TermRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,13 +21,13 @@ import java.util.List;
  *
  * @author Seungjo, Jeong
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TermService {
 
     private final TermRepository termRepository;
 
-    @Transactional(readOnly = true)
     public List<TermResponse> getPagedTerms(Pageable pageable) {
         List<AdminTermDto> pagedTerms = termRepository.getPagedTerms(pageable);
 
@@ -38,17 +38,38 @@ public class TermService {
 
     @Transactional
     public CreateTermResponse create(CreateTermRequest request) {
+        TermCode termCode = TermCode.getCode(request.code())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid term code: " + request.code()));
 
-        Term term = Term.builder()
-                .code(TermCode.valueOf(request.code()))
+        int nextVersion = termRepository.findMaxVersionByCode(termCode)
+                .map(version -> version + 1)
+                .orElse(1);
+
+        if (nextVersion > 1) {
+            termRepository.deactivateBeforeTerm(termCode, request.activatedAt());
+        }
+
+        Term newTerm = Term.builder()
+                .code(termCode)
                 .title(request.title())
-                .type(TermType.valueOf(request.type()))
+                .content(request.content())
+                .version(nextVersion)
                 .displayOrder(request.displayOrder())
-                .status(TermStatus.valueOf(request.status()))
+                .isRequired(request.isRequired())
+                .activatedAt(request.activatedAt())
+                .deactivatedAt(request.deactivatedAt())
                 .build();
 
-        Term savedTerm = termRepository.save(term);
+        Term savedTerm = saveWithConstraintCheck(newTerm);
+        return new CreateTermResponse(savedTerm.getId(), savedTerm.getCode().name(), savedTerm.getVersion());
+    }
 
-        return new CreateTermResponse(savedTerm.getId());
+    private Term saveWithConstraintCheck(Term term) {
+        try {
+            return termRepository.save(term);
+        } catch (DataIntegrityViolationException e) {
+            log.error("Term constraint violation: {}", e.getMessage());
+            throw new IllegalStateException("Term constraint violation", e);
+        }
     }
 }

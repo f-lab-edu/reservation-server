@@ -1,12 +1,14 @@
 package com.f1v3.reservation.common.domain;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 /**
  * 생성 및 수정 시간을 자동으로 관리하는 베이스 엔티티 클래스.
@@ -15,13 +17,14 @@ import java.sql.Timestamp;
  */
 @Getter
 @MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {
 
-    @CreationTimestamp
+    @CreatedDate
     @Column(nullable = false, updatable = false)
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
 
-    @UpdateTimestamp
+    @LastModifiedDate
     @Column(nullable = false)
-    private Timestamp updatedAt;
+    private LocalDateTime updatedAt;
 }
