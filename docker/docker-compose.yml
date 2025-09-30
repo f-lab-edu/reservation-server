@@ -1,0 +1,18 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: reservation-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: reservation
+    volumes:
+      - ./mysql-init.d:/docker-entrypoint-initdb.d
+    networks:
+      - reservation-network
+
+networks:
+  reservation-network:
+    driver: bridge
+    name: reservation-network
