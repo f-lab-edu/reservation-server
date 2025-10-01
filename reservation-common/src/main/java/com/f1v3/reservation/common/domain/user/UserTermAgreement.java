@@ -1,7 +1,6 @@
 package com.f1v3.reservation.common.domain.user;
 
 import com.f1v3.reservation.common.domain.term.Term;
-import com.f1v3.reservation.common.domain.term.TermVersion;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -33,18 +32,13 @@ public class UserTermAgreement {
     @JoinColumn(name = "term_id", nullable = false)
     private Term term;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "term_version_id", nullable = false)
-    private TermVersion termVersion;
-
     @Column(nullable = false, updatable = false)
     private LocalDateTime agreedAt;
 
     @Builder
-    private UserTermAgreement(User user, Term term, TermVersion termVersion) {
+    private UserTermAgreement(User user, Term term) {
         this.user = user;
         this.term = term;
-        this.termVersion = termVersion;
         this.agreedAt = LocalDateTime.now();
     }
 }
