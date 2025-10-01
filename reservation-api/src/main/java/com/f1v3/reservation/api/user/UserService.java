@@ -30,32 +30,23 @@ public class UserService {
     public SignupUserResponse signup(SignupUserRequest request) {
 
         phoneVerificationService.checkVerified(request.phoneNumber());
-        checkDuplicateUser(request);
+        userValidationService.checkPhoneNumberExists(request.phoneNumber());
+        userValidationService.checkEmailExists(request.email());
 
-        User user = createUser(request);
-        User savedUser = userRepository.save(user);
-        userTermAgreementService.createAgreements(savedUser, request.terms());
+        String encryptedPassword = passwordEncoder.encode(request.password());
 
-        return new SignupUserResponse(savedUser.getId());
-    }
-
-    private void checkDuplicateUser(SignupUserRequest request) {
-        userValidationService.validatePhoneNumberDuplication(request.phoneNumber());
-        userValidationService.validateEmailDuplication(request.email());
-    }
-
-    private User createUser(SignupUserRequest request) {
-        return User.createUser()
+        User newUser = User.createUser()
                 .email(request.email())
-                .password(encryptPassword(request.password()))
+                .password(encryptedPassword)
                 .nickname(request.nickname())
                 .phoneNumber(request.phoneNumber())
                 .birth(request.birth())
                 .gender(Gender.findBy(request.gender()))
                 .build();
-    }
 
-    private String encryptPassword(String password) {
-        return passwordEncoder.encode(password);
+        User savedUser = userRepository.save(newUser);
+        userTermAgreementService.createAgreements(savedUser, request.terms());
+
+        return new SignupUserResponse(savedUser.getId());
     }
 }
