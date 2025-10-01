@@ -15,13 +15,13 @@ public class UserValidationService {
 
     private final UserRepository userRepository;
 
-    public void validatePhoneNumberDuplication(String phoneNumber) {
+    public void checkPhoneNumberExists(String phoneNumber) {
         if (userRepository.existsByPhoneNumber(phoneNumber)) {
             throw new IllegalArgumentException("이미 가입된 핸드폰 번호입니다.");
         }
     }
 
-    public void validateEmailDuplication(String email) {
+    public void checkEmailExists(String email) {
         if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("이미 가입된 이메일입니다.");
         }
