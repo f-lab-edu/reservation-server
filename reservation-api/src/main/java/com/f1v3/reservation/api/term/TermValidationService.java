@@ -2,12 +2,16 @@ package com.f1v3.reservation.api.term;
 
 import com.f1v3.reservation.api.term.dto.TermResponse;
 import com.f1v3.reservation.api.user.dto.SignupUserRequest;
+import com.f1v3.reservation.common.api.error.ReservationException;
 import com.f1v3.reservation.common.domain.term.enums.TermCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.f1v3.reservation.common.api.error.ErrorCode.TERM_CODE_NOT_FOUND;
+import static com.f1v3.reservation.common.api.error.ErrorCode.TERM_REQUIRED_NOT_AGREED;
 
 /**
  * 회원가입 약관 동의 검증 서비스
@@ -28,13 +32,14 @@ public class TermValidationService {
 
         Set<TermCode> agreedTermIds = termRequests.stream()
                 .map(request -> TermCode.getCode(request.termCode())
-                        .orElseThrow(() -> new IllegalArgumentException("Invalid termCode: " + request.termCode())))
+                        .orElseThrow(() -> new ReservationException(TERM_CODE_NOT_FOUND))
+                )
                 .collect(Collectors.toSet());
 
         requiredTermIds.removeAll(agreedTermIds);
 
         if (!requiredTermIds.isEmpty()) {
-            throw new IllegalArgumentException("필수 약관에 모두 동의해야 합니다. 누락된 약관 id=" + requiredTermIds);
+            throw new ReservationException(TERM_REQUIRED_NOT_AGREED);
         }
     }
 }
