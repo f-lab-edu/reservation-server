@@ -23,4 +23,7 @@ public interface TermRepository extends JpaRepository<Term, Long>, TermRepositor
     @Modifying
     @Query("UPDATE Term t SET t.deactivatedAt = :deactivatedAt WHERE t.code = :termCode AND t.deactivatedAt IS NULL")
     void deactivateBeforeTerm(@Param("termCode") TermCode termCode, @Param("deactivatedAt") LocalDateTime deactivatedAt);
+
+    Optional<Term> findByCodeAndVersion(TermCode code, Integer version);
+
 }
