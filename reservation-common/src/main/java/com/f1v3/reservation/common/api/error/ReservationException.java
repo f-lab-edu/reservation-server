@@ -9,13 +9,14 @@ import lombok.Getter;
  */
 @Getter
 public class ReservationException extends RuntimeException {
+    private final ErrorStatus status;
     private final int code;
     private final String message;
 
     public ReservationException(ErrorCode errorCode) {
         super(errorCode.getMessage());
+        this.status = errorCode.getStatus();
         this.code = errorCode.getCode();
         this.message = errorCode.getMessage();
     }
 }
-
