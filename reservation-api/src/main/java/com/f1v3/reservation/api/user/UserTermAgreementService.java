@@ -3,9 +3,7 @@ package com.f1v3.reservation.api.user;
 import com.f1v3.reservation.api.term.TermValidationService;
 import com.f1v3.reservation.api.user.dto.SignupUserRequest;
 import com.f1v3.reservation.common.domain.term.Term;
-import com.f1v3.reservation.common.domain.term.TermVersion;
 import com.f1v3.reservation.common.domain.term.repository.TermRepository;
-import com.f1v3.reservation.common.domain.term.repository.TermVersionRepository;
 import com.f1v3.reservation.common.domain.user.User;
 import com.f1v3.reservation.common.domain.user.UserTermAgreement;
 import com.f1v3.reservation.common.domain.user.repository.UserTermAgreementRepository;
@@ -28,11 +26,9 @@ public class UserTermAgreementService {
     private final TermValidationService termValidationService;
     private final UserTermAgreementRepository userTermAgreementRepository;
     private final TermRepository termRepository;
-    private final TermVersionRepository termVersionRepository;
 
     @Transactional
     public void createAgreements(User user, Set<SignupUserRequest.SignupTermRequest> termRequests) {
-
         termValidationService.validateRequiredTermsAgreed(termRequests);
 
         List<UserTermAgreement> agreements = termRequests.stream()
@@ -43,16 +39,12 @@ public class UserTermAgreementService {
     }
 
     private UserTermAgreement createAgreement(User user, SignupUserRequest.SignupTermRequest termRequest) {
-        Term term = termRepository.findById(termRequest.termId())
+        Term term = termRepository.findByIdAndVersion(termRequest.termId(), termRequest.version())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관입니다. id=" + termRequest.termId()));
-
-        TermVersion termVersion = termVersionRepository.findById(termRequest.termVersionId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관 버전입니다. id=" + termRequest.termVersionId()));
 
         return UserTermAgreement.builder()
                 .user(user)
                 .term(term)
-                .termVersion(termVersion)
                 .build();
     }
 }
