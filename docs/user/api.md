@@ -13,14 +13,14 @@ REQEUST:
     "phoneNumber": "010-0000-0000", // 인증이 완료된 번호인지 확인 필요
     "birthDate": "1999-05-13",
     "gender": "M" | "F",
-    "agreeTerms": [
+    "agreedTerms": [
         {
-            "termId": 1,        // 약관 ID
-            "termVersion": 1    // 약관 버전
+            "terCode": "TERM_SERVICE",        
+            "version": 1    // 약관 버전
         },
         {
-            "termId": 2,
-            "termVersion": 3
+            "termCode": "TERM_PRIVACY",
+            "version": 3
         }
     ]
 }
