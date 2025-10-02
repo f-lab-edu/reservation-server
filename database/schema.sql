@@ -82,6 +82,6 @@ CREATE TABLE phone_verifications
     created_at  DATETIME DEFAULT NOW(),
     updated_at  DATETIME DEFAULT NOW() ON UPDATE NOW(),
 
-    INDEX idx_phone_number (phone_number)
+    UNIQUE KEY uk_phone_number (phone_number)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
