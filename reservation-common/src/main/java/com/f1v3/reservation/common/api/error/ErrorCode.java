@@ -10,6 +10,7 @@ import lombok.Getter;
 @Getter
 public enum ErrorCode {
 
+
     /*
     공통 에러 정의 [code: 1xxx]
      */
@@ -33,6 +34,7 @@ public enum ErrorCode {
     PHONE_VERIFICATION_ATTEMPTS_EXCEEDED(4205, "인증 시도 횟수를 초과했습니다."),
     PHONE_VERIFICATION_NOT_VERIFIED(4207, "핸드폰 인증이 완료되지 않았습니다."),
     PHONE_VERIFICATION_INFO_EXPIRED(4208, "핸드폰 인증 정보가 만료되었습니다."),
+    PHONE_VERIFICATION_RESEND_NOT_ALLOWED(4209, "인증번호 재전송은 3분 후에 가능합니다."),
 
     /*
     회원(User) [code: 43xx]
@@ -53,4 +55,4 @@ public enum ErrorCode {
         this.code = code;
         this.message = message;
     }
-    }
+}
