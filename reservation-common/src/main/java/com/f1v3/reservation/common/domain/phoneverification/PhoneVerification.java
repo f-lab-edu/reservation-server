@@ -55,27 +55,40 @@ public class PhoneVerification extends BaseEntity {
         this.expiredAt = LocalDateTime.now().plusMinutes(VERIFICATION_EXPIRY_MINUTES);
     }
 
-    public void verify(String code) {
-        incrementAttempt();
-        validateCode(code);
-        this.isVerified = true;
-        this.verifiedAt = LocalDateTime.now();
+    public boolean isExpired() {
+        return LocalDateTime.now().isAfter(this.expiredAt);
     }
 
-    private void incrementAttempt() {
+    public boolean isAlreadyVerified() {
+        return Boolean.TRUE.equals(this.isVerified);
+    }
+
+    public void incrementAttempt() {
         if (this.attemptCount >= MAX_ATTEMPT) {
-            throw new IllegalStateException("최대 시도 횟수를 초과했습니다.");
+            throw new IllegalStateException("인증 시도 횟수를 초과했습니다.");
         }
+
         this.attemptCount += 1;
     }
 
-    private void validateCode(String code) {
-        if (!this.verificationCode.equals(code)) {
-            throw new IllegalArgumentException("인증 코드가 일치하지 않습니다.");
-        }
+    public boolean checkCode(String code) {
+        return this.verificationCode.equals(code);
     }
 
     public boolean isExpiredForVerifiedDuration() {
         return LocalDateTime.now().isAfter(verifiedAt.plusMinutes(VERIFIED_DURATION_MINUTES));
+    }
+
+    public void resend(String newCode) {
+        this.verificationCode = newCode;
+        this.attemptCount = 0;
+        this.isVerified = false;
+        this.expiredAt = LocalDateTime.now().plusMinutes(VERIFICATION_EXPIRY_MINUTES);
+        this.verifiedAt = null;
+    }
+
+    public void verify() {
+        this.isVerified = true;
+        this.verifiedAt = LocalDateTime.now();
     }
 }
