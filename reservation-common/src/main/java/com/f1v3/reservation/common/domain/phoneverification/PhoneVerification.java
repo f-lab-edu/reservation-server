@@ -64,10 +64,6 @@ public class PhoneVerification extends BaseEntity {
     }
 
     public void incrementAttempt() {
-        if (this.attemptCount >= MAX_ATTEMPT) {
-            throw new IllegalStateException("인증 시도 횟수를 초과했습니다.");
-        }
-
         this.attemptCount += 1;
     }
 
@@ -90,5 +86,9 @@ public class PhoneVerification extends BaseEntity {
     public void verify() {
         this.isVerified = true;
         this.verifiedAt = LocalDateTime.now();
+    }
+
+    public boolean isExceededMaxAttempts() {
+        return this.attemptCount > MAX_ATTEMPT;
     }
 }

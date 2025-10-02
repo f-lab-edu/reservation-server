@@ -26,13 +26,13 @@ public class PhoneVerificationController {
 
     @PostMapping("/send")
     public ResponseEntity<SendPhoneVerificationResponse> sendVerifyCode(@Valid @RequestBody SendPhoneVerificationRequest request) {
-
         SendPhoneVerificationResponse response = phoneVerificationService.sendVerifyCode(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/verify")
     public ResponseEntity<Void> verifyCode(@Valid @RequestBody VerifyPhoneVerificationRequest request) {
+        phoneVerificationService.incrementAttempt(request.phoneNumber());
         phoneVerificationService.verifyCode(request);
         return ResponseEntity.ok().build();
     }

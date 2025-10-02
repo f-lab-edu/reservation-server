@@ -38,8 +38,17 @@ public class PhoneVerificationService {
         PhoneVerificationStrategy strategy = determineStrategy(request.phoneNumber(), verificationCode);
         PhoneVerification verification = strategy.execute(request.phoneNumber());
 
+        phoneVerificationRepository.save(verification);
         sendSms(request.phoneNumber(), verificationCode);
         return new SendPhoneVerificationResponse(verification.getExpiredAt());
+    }
+
+    @Transactional
+    public void incrementAttempt(String phoneNumber) {
+        PhoneVerification verification = phoneVerificationRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new IllegalArgumentException("인증 요청이 존재하지 않습니다."));
+
+        verification.incrementAttempt();
     }
 
     @Transactional
@@ -55,7 +64,9 @@ public class PhoneVerificationService {
             throw new IllegalArgumentException("인증 요청이 만료되었습니다. 다시 인증코드를 발급해주세요.");
         }
 
-        verification.incrementAttempt();
+        if (verification.isExceededMaxAttempts()) {
+            throw new IllegalArgumentException("인증 시도 횟수를 초과하였습니다. 다시 인증코드를 발급해주세요.");
+        }
 
         if (!verification.checkCode(request.verificationCode())) {
             throw new IllegalArgumentException("인증 코드가 일치하지 않습니다.");
@@ -63,6 +74,8 @@ public class PhoneVerificationService {
 
         userValidationService.checkPhoneNumberExists(request.phoneNumber());
         verification.verify();
+
+        phoneVerificationRepository.save(verification);
     }
 
     @Transactional(readOnly = true)
@@ -101,6 +114,6 @@ public class PhoneVerificationService {
         return phoneVerificationRepository.findByPhoneNumber(phoneNumber)
                 .<PhoneVerificationStrategy>map(existing ->
                         new ResendVerificationStrategy(existing, verificationCode))
-                .orElseGet(() -> new NewVerificationStrategy(phoneVerificationRepository, verificationCode));
+                .orElseGet(() -> new NewVerificationStrategy(verificationCode));
     }
 }
