@@ -2,6 +2,7 @@ package com.f1v3.reservation.api.term;
 
 import com.f1v3.reservation.api.term.dto.TermResponse;
 import com.f1v3.reservation.api.user.dto.SignupUserRequest;
+import com.f1v3.reservation.common.domain.term.enums.TermCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,13 +21,14 @@ public class TermValidationService {
     private final TermService termService;
 
     public void validateRequiredTermsAgreed(Set<SignupUserRequest.SignupTermRequest> termRequests) {
-        Set<Long> requiredTermIds = termService.getActiveTerms().stream()
+        Set<TermCode> requiredTermIds = termService.getActiveTerms().stream()
                 .filter(TermResponse::isRequired)
-                .map(TermResponse::termId)
+                .map(TermResponse::termCode)
                 .collect(Collectors.toSet());
 
-        Set<Long> agreedTermIds = termRequests.stream()
-                .map(SignupUserRequest.SignupTermRequest::termId)
+        Set<TermCode> agreedTermIds = termRequests.stream()
+                .map(request -> TermCode.getCode(request.termCode())
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid termCode: " + request.termCode())))
                 .collect(Collectors.toSet());
 
         requiredTermIds.removeAll(agreedTermIds);

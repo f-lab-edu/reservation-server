@@ -1,5 +1,6 @@
 package com.f1v3.reservation.api.user.dto;
 
+import com.f1v3.reservation.common.domain.term.enums.TermCode;
 import com.f1v3.reservation.common.domain.user.enums.Gender;
 import com.f1v3.reservation.common.validator.EnumValid;
 import jakarta.validation.constraints.NotBlank;
@@ -37,12 +38,13 @@ public record SignupUserRequest(
         String gender,
 
         @NotEmpty(message = "약관 동의를 해주세요.")
-        Set<SignupTermRequest> terms
+        Set<SignupTermRequest> agreeTerms
 ) {
 
     public record SignupTermRequest(
-            @NotNull(message = "약관 ID를 입력해주세요.")
-            Long termId,
+            @NotBlank(message = "약관 코드를 입력해주세요.")
+            @EnumValid(message = "올바른 약관 코드를 입력해주세요.", enumClass = TermCode.class)
+            String termCode,
 
             @NotNull(message = "약관 버전을 입력해주세요.")
             Integer version

@@ -45,7 +45,7 @@ public class UserService {
                 .build();
 
         User savedUser = userRepository.save(newUser);
-        userTermAgreementService.createAgreements(savedUser, request.terms());
+        userTermAgreementService.createAgreements(savedUser, request.agreeTerms());
 
         return new SignupUserResponse(savedUser.getId());
     }

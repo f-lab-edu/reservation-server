@@ -3,6 +3,7 @@ package com.f1v3.reservation.api.user;
 import com.f1v3.reservation.api.term.TermValidationService;
 import com.f1v3.reservation.api.user.dto.SignupUserRequest;
 import com.f1v3.reservation.common.domain.term.Term;
+import com.f1v3.reservation.common.domain.term.enums.TermCode;
 import com.f1v3.reservation.common.domain.term.repository.TermRepository;
 import com.f1v3.reservation.common.domain.user.User;
 import com.f1v3.reservation.common.domain.user.UserTermAgreement;
@@ -38,9 +39,12 @@ public class UserTermAgreementService {
         userTermAgreementRepository.saveAll(agreements);
     }
 
-    private UserTermAgreement createAgreement(User user, SignupUserRequest.SignupTermRequest termRequest) {
-        Term term = termRepository.findByIdAndVersion(termRequest.termId(), termRequest.version())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관입니다. id=" + termRequest.termId()));
+    private UserTermAgreement createAgreement(User user, SignupUserRequest.SignupTermRequest request) {
+        TermCode termCode = TermCode.getCode(request.termCode())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid termCode: " + request.termCode()));
+
+        Term term = termRepository.findByCodeAndVersion(termCode, request.version())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관입니다. termCode=" + request.termCode() + ", version=" + request.version()));
 
         return UserTermAgreement.builder()
                 .user(user)
