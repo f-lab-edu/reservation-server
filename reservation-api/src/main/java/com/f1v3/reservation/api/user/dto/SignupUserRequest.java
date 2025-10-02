@@ -38,7 +38,7 @@ public record SignupUserRequest(
         String gender,
 
         @NotEmpty(message = "약관 동의를 해주세요.")
-        Set<SignupTermRequest> agreeTerms
+        Set<SignupTermRequest> agreedTerms
 ) {
 
     public record SignupTermRequest(
