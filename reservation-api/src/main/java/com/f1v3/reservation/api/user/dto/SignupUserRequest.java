@@ -44,8 +44,8 @@ public record SignupUserRequest(
             @NotNull(message = "약관 ID를 입력해주세요.")
             Long termId,
 
-            @NotNull(message = "약관 버전 ID를 입력해주세요.")
-            Long termVersionId
+            @NotNull(message = "약관 버전을 입력해주세요.")
+            Integer version
     ) {
     }
 }
