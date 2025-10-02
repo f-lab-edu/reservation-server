@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.f1v3.reservation.common.api.error.ErrorCode.TERM_CODE_NOT_FOUND;
+import static com.f1v3.reservation.common.api.error.ErrorCode.TERM_CODE_INVALID;
 import static com.f1v3.reservation.common.api.error.ErrorCode.TERM_REQUIRED_NOT_AGREED;
 
 /**
@@ -32,7 +32,7 @@ public class TermValidationService {
 
         Set<TermCode> agreedTermIds = termRequests.stream()
                 .map(request -> TermCode.getCode(request.termCode())
-                        .orElseThrow(() -> new ReservationException(TERM_CODE_NOT_FOUND))
+                        .orElseThrow(() -> new ReservationException(TERM_CODE_INVALID))
                 )
                 .collect(Collectors.toSet());
 
