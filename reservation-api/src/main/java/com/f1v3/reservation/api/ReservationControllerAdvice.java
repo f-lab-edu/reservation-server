@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * API 예외 처리 컨트롤러 어드바이스
+ * 사용자 서버 컨트롤러 어드바이스
  *
  * @author Seungjo, Jeong
  */
