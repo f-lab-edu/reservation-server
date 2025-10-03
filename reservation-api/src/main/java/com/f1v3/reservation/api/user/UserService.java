@@ -41,7 +41,7 @@ public class UserService {
                 .nickname(request.nickname())
                 .phoneNumber(request.phoneNumber())
                 .birth(request.birth())
-                .gender(Gender.findBy(request.gender()))
+                .gender(Gender.getGender(request.gender()))
                 .build();
 
         User savedUser = userRepository.save(newUser);
