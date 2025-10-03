@@ -1,5 +1,6 @@
 package com.f1v3.reservation.common.validator;
 
+import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 import java.lang.annotation.ElementType;
@@ -14,6 +15,7 @@ import java.lang.annotation.Target;
  */
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = EnumValidator.class)
 public @interface EnumValid {
 
     String message() default "Invalid value. This is not permitted.";
