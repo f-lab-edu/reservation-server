@@ -46,18 +46,18 @@ CREATE TABLE users
     nickname      VARCHAR(50)  NOT NULL,
     phone_number  VARCHAR(20)  NOT NULL UNIQUE,
     birth_date    DATE         NOT NULL,
-    gender        VARCHAR(5)      NOT NULL, # ENUM ('M', 'F')
+    gender        VARCHAR(5)   NOT NULL, # ENUM ('M', 'F')
     role          VARCHAR(20)  NOT NULL, # ENUM ('USER', 'SUPPLIER', 'ADMIN')
-    created_at DATETIME DEFAULT NOW(),
-    updated_at DATETIME DEFAULT NOW() ON UPDATE NOW()
+    created_at    DATETIME DEFAULT NOW(),
+    updated_at    DATETIME DEFAULT NOW() ON UPDATE NOW()
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE user_term_agreements
 (
-    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id         BIGINT NOT NULL,
-    term_id         BIGINT NOT NULL,
+    id        BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id   BIGINT NOT NULL,
+    term_id   BIGINT NOT NULL,
     agreed_at DATETIME DEFAULT NOW(),
 
     FOREIGN KEY (user_id) REFERENCES users (id),
@@ -77,10 +77,11 @@ CREATE TABLE phone_verifications
     verification_code VARCHAR(5)  NOT NULL,
     attempt_count     INT         NOT NULL DEFAULT 0, # 인증 시도 횟수 (최대 3회 제한)
     is_verified       BOOLEAN     NOT NULL DEFAULT FALSE,
-    expired_at  DATETIME NOT NULL,
-    verified_at DATETIME NULL,
-    created_at  DATETIME DEFAULT NOW(),
-    updated_at  DATETIME DEFAULT NOW() ON UPDATE NOW(),
+    expired_at        DATETIME    NOT NULL,
+    verified_at       DATETIME    NULL,
+    last_sent_at      DATETIME    NOT NULL,
+    created_at        DATETIME             DEFAULT NOW(),
+    updated_at        DATETIME             DEFAULT NOW() ON UPDATE NOW(),
 
     UNIQUE KEY uk_phone_number (phone_number)
 ) ENGINE = InnoDB

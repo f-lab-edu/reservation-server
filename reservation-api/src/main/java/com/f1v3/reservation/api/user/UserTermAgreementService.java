@@ -2,6 +2,7 @@ package com.f1v3.reservation.api.user;
 
 import com.f1v3.reservation.api.term.TermValidationService;
 import com.f1v3.reservation.api.user.dto.SignupUserRequest;
+import com.f1v3.reservation.common.api.error.ReservationException;
 import com.f1v3.reservation.common.domain.term.Term;
 import com.f1v3.reservation.common.domain.term.enums.TermCode;
 import com.f1v3.reservation.common.domain.term.repository.TermRepository;
@@ -14,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
+
+import static com.f1v3.reservation.common.api.error.ErrorCode.TERM_NOT_FOUND;
 
 /**
  * 사용자 약관 동의 서비스 클래스
@@ -41,10 +44,10 @@ public class UserTermAgreementService {
 
     private UserTermAgreement createAgreement(User user, SignupUserRequest.SignupTermRequest request) {
         TermCode termCode = TermCode.getCode(request.termCode())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid termCode: " + request.termCode()));
+                .orElseThrow(() -> new ReservationException(TERM_NOT_FOUND));
 
         Term term = termRepository.findByCodeAndVersion(termCode, request.version())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 약관입니다. termCode=" + request.termCode() + ", version=" + request.version()));
+                .orElseThrow(() -> new ReservationException(TERM_NOT_FOUND));
 
         return UserTermAgreement.builder()
                 .user(user)

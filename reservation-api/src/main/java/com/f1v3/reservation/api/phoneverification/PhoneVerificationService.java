@@ -8,6 +8,7 @@ import com.f1v3.reservation.api.phoneverification.strategy.NewVerificationStrate
 import com.f1v3.reservation.api.phoneverification.strategy.PhoneVerificationStrategy;
 import com.f1v3.reservation.api.phoneverification.strategy.ResendVerificationStrategy;
 import com.f1v3.reservation.api.user.UserValidationService;
+import com.f1v3.reservation.common.api.error.ReservationException;
 import com.f1v3.reservation.common.domain.phoneverification.PhoneVerification;
 import com.f1v3.reservation.common.domain.phoneverification.repository.PhoneVerificationRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.concurrent.ThreadLocalRandom;
+
+import static com.f1v3.reservation.common.api.error.ErrorCode.*;
 
 /**
  * 핸드폰 인증 서비스 클래스
@@ -46,7 +49,7 @@ public class PhoneVerificationService {
     @Transactional
     public void incrementAttempt(String phoneNumber) {
         PhoneVerification verification = phoneVerificationRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new IllegalArgumentException("인증 요청이 존재하지 않습니다."));
+                .orElseThrow(() -> new ReservationException(PHONE_VERIFICATION_NOT_FOUND));
 
         verification.incrementAttempt();
     }
@@ -54,22 +57,22 @@ public class PhoneVerificationService {
     @Transactional
     public void verifyCode(VerifyPhoneVerificationRequest request) {
         PhoneVerification verification = phoneVerificationRepository.findByPhoneNumber(request.phoneNumber())
-                .orElseThrow(() -> new IllegalArgumentException("인증 요청이 존재하지 않습니다."));
+                .orElseThrow(() -> new ReservationException(PHONE_VERIFICATION_NOT_FOUND));
 
         if (verification.isAlreadyVerified()) {
-            throw new IllegalArgumentException("이미 인증된 핸드폰 번호입니다.");
+            throw new ReservationException(PHONE_VERIFICATION_ALREADY_VERIFIED);
         }
 
         if (verification.isExpired()) {
-            throw new IllegalArgumentException("인증 요청이 만료되었습니다. 다시 인증코드를 발급해주세요.");
+            throw new ReservationException(PHONE_VERIFICATION_CODE_EXPIRED);
         }
 
         if (verification.isExceededMaxAttempts()) {
-            throw new IllegalArgumentException("인증 시도 횟수를 초과하였습니다. 다시 인증코드를 발급해주세요.");
+            throw new ReservationException(PHONE_VERIFICATION_ATTEMPTS_EXCEEDED);
         }
 
         if (!verification.checkCode(request.verificationCode())) {
-            throw new IllegalArgumentException("인증 코드가 일치하지 않습니다.");
+            throw new ReservationException(PHONE_VERIFICATION_CODE_INVALID);
         }
 
         userValidationService.checkPhoneNumberExists(request.phoneNumber());
@@ -81,14 +84,14 @@ public class PhoneVerificationService {
     @Transactional(readOnly = true)
     public void checkVerified(String phoneNumber) {
         PhoneVerification verification = phoneVerificationRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new IllegalStateException("핸드폰 인증 내역이 존재하지 않습니다."));
+                .orElseThrow(() -> new ReservationException(PHONE_VERIFICATION_NOT_FOUND));
 
         if (!verification.isAlreadyVerified()) {
-            throw new IllegalStateException("핸드폰 인증이 완료되지 않았습니다.");
+            throw new ReservationException(PHONE_VERIFICATION_NOT_VERIFIED);
         }
 
         if (verification.isExpiredForVerifiedDuration()) {
-            throw new IllegalStateException("핸드폰 인증이 만료되었습니다. 다시 인증해주세요.");
+            throw new ReservationException(PHONE_VERIFICATION_INFO_EXPIRED);
         }
     }
 

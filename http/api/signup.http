@@ -1,0 +1,50 @@
+### 회원가입을 위해 현재 활성화된 약관 조회
+GET http://localhost:8080/v1/terms/active
+
+### 핸드폰 인증 번호 요청
+POST http://localhost:8080/v1/phone-verifications/send
+Content-Type: application/json
+
+{
+  "phoneNumber": "010-2717-8134"
+}
+
+### 핸드폰 인증 번호 검증
+POST http://localhost:8080/v1/phone-verifications/verify
+Content-Type: application/json
+
+{
+  "phoneNumber": "010-2717-8134",
+  "verificationCode": "64793"
+}
+
+### 회원 가입 요청
+POST http://localhost:8080/v1/users/signup
+Content-Type: application/json
+
+{
+  "password": "seungjo123!",
+  "email": "f1v3@kakao.com",
+  "nickname": "f1v3",
+  "phoneNumber": "010-2717-8134",
+  "birth": "1999-05-13",
+  "gender": "M",
+  "agreedTerms": [
+    {
+      "termCode": "TERM_SERVICE",
+      "version": 2
+    },
+    {
+      "termCode": "TERM_PRIVACY",
+      "version": 3
+    },
+    {
+      "termCode": "TERM_AGE",
+      "version": 1
+    },
+    {
+      "termCode": "TERM_MARKETING",
+      "version": 1
+    }
+  ]
+}

@@ -1,8 +1,12 @@
 package com.f1v3.reservation.api.user;
 
+import com.f1v3.reservation.common.api.error.ReservationException;
 import com.f1v3.reservation.common.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import static com.f1v3.reservation.common.api.error.ErrorCode.USER_EMAIL_ALREADY_EXISTS;
+import static com.f1v3.reservation.common.api.error.ErrorCode.USER_PHONE_ALREADY_EXISTS;
 
 /**
  * 회원 검증 서비스
@@ -17,13 +21,13 @@ public class UserValidationService {
 
     public void checkPhoneNumberExists(String phoneNumber) {
         if (userRepository.existsByPhoneNumber(phoneNumber)) {
-            throw new IllegalArgumentException("이미 가입된 핸드폰 번호입니다.");
+            throw new ReservationException(USER_PHONE_ALREADY_EXISTS);
         }
     }
 
     public void checkEmailExists(String email) {
         if (userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+            throw new ReservationException(USER_EMAIL_ALREADY_EXISTS);
         }
     }
 }
