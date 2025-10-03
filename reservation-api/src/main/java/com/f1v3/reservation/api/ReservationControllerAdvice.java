@@ -3,6 +3,7 @@ package com.f1v3.reservation.api;
 import com.f1v3.reservation.common.api.error.ErrorCode;
 import com.f1v3.reservation.common.api.error.ReservationException;
 import com.f1v3.reservation.common.api.response.ApiResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,6 +17,7 @@ import java.util.Map;
  *
  * @author Seungjo, Jeong
  */
+@Slf4j
 @RestControllerAdvice
 public class ReservationControllerAdvice {
 
@@ -40,6 +42,22 @@ public class ReservationControllerAdvice {
                 ErrorCode.INVALID_REQUEST_PARAMETER.getCode(),
                 ErrorCode.INVALID_REQUEST_PARAMETER.getMessage(),
                 errors
+        );
+
+        return ResponseEntity
+                .status(code.getStatus().getCode())
+                .body(response);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<?>> handleGeneralException(Exception e) {
+        log.info("Unexpected error = {}", e.getMessage(), e);
+
+        ErrorCode code = ErrorCode.SERVER_ERROR;
+
+        ApiResponse<?> response = ApiResponse.error(
+                code.getCode(),
+                code.getMessage()
         );
 
         return ResponseEntity

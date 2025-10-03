@@ -3,6 +3,7 @@ package com.f1v3.reservation.admin;
 import com.f1v3.reservation.common.api.error.ErrorCode;
 import com.f1v3.reservation.common.api.error.ReservationException;
 import com.f1v3.reservation.common.api.response.ApiResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,6 +17,7 @@ import java.util.Map;
  *
  * @author Seungjo, Jeong
  */
+@Slf4j
 @RestControllerAdvice
 public class AdminReservationControllerAdvice {
 
@@ -42,6 +44,23 @@ public class AdminReservationControllerAdvice {
                 errorCode.getCode(),
                 errorCode.getMessage(),
                 errors
+        );
+
+        return ResponseEntity
+                .status(errorCode.getStatus().getCode())
+                .body(response);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<?>> handleGeneralException(Exception e) {
+
+        log.error("Unexpected error = {}", e.getMessage(), e);
+
+        ErrorCode errorCode = ErrorCode.SERVER_ERROR;
+
+        ApiResponse<?> response = ApiResponse.error(
+                errorCode.getCode(),
+                errorCode.getMessage()
         );
 
         return ResponseEntity
