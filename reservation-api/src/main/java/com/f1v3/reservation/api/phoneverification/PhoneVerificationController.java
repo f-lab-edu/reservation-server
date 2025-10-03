@@ -3,14 +3,11 @@ package com.f1v3.reservation.api.phoneverification;
 import com.f1v3.reservation.api.phoneverification.dto.SendPhoneVerificationRequest;
 import com.f1v3.reservation.api.phoneverification.dto.SendPhoneVerificationResponse;
 import com.f1v3.reservation.api.phoneverification.dto.VerifyPhoneVerificationRequest;
+import com.f1v3.reservation.common.api.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 핸드폰 인증 컨트롤러 클래스
@@ -25,15 +22,16 @@ public class PhoneVerificationController {
     private final PhoneVerificationService phoneVerificationService;
 
     @PostMapping("/send")
-    public ResponseEntity<SendPhoneVerificationResponse> sendVerifyCode(@Valid @RequestBody SendPhoneVerificationRequest request) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<SendPhoneVerificationResponse> sendVerifyCode(@Valid @RequestBody SendPhoneVerificationRequest request) {
         SendPhoneVerificationResponse response = phoneVerificationService.sendVerifyCode(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ApiResponse.success(response);
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<Void> verifyCode(@Valid @RequestBody VerifyPhoneVerificationRequest request) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public void verifyCode(@Valid @RequestBody VerifyPhoneVerificationRequest request) {
         phoneVerificationService.incrementAttempt(request.phoneNumber());
         phoneVerificationService.verifyCode(request);
-        return ResponseEntity.ok().build();
     }
 }
