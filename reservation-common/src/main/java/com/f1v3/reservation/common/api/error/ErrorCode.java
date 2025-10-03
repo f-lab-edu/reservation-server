@@ -22,6 +22,8 @@ public enum ErrorCode {
     TERM_CODE_INVALID(ErrorStatus.BAD_REQUEST, 4102, "올바르지 않은 약관 코드입니다."),
     TERM_REQUIRED_NOT_AGREED(ErrorStatus.BAD_REQUEST, 4103, "필수 약관에 동의하지 않았습니다."),
     TERM_VERSION_CONSTRAINT_VIOLATION(ErrorStatus.CONFLICT, 4104, "약관 생성 시 버전 충돌이 발생했습니다. 버전을 확인해주세요."),
+    TERM_REQUIRED_DISPLAY_ORDER_INVALID(ErrorStatus.BAD_REQUEST, 4105, "필수 약관의 표시 순서는 0 ~ 500 사이의 값이어야 합니다."),
+    TERM_OPTIONAL_DISPLAY_ORDER_INVALID(ErrorStatus.BAD_REQUEST, 4106, "선택 약관의 표시 순서는 501 ~ 1000 사이의 값이어야 합니다."),
 
     /*
     핸드폰 인증(PhoneVerification) [code: 42xx]
