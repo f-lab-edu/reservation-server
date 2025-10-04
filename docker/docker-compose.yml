@@ -12,6 +12,14 @@ services:
     networks:
       - reservation-network
 
+  redis:
+    image: redis:8.2
+    container_name: reservation-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - reservation-network
+
 networks:
   reservation-network:
     driver: bridge
