@@ -57,8 +57,8 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(handler -> handler.authenticationEntryPoint(failedAuthenticationEntryPoint))
-                .addFilterBefore(tokenExceptionFilter, TokenAuthenticationFilter.class)
                 .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(tokenExceptionFilter, TokenAuthenticationFilter.class)
                 .build();
     }
 
