@@ -1,5 +1,5 @@
 jwt:
   token:
-    secretKey: Asox0KoqMjnHXvEIG3YyBLhoVDi67Np5BRI7Grl9TmE=
+    secretKey: d2qh1Bkce9qK9j0Ukf0A4LOH/JsC9+u4CQg+5VxwGoOlG20YWjI0fgdyzJY4ipgM3pcA5gV8diek/A1xiTJPIA==
     accessTokenExpirationMs: 1800000    # 30 minutes
     refreshTokenExpirationMs: 604800000 # 7 days
