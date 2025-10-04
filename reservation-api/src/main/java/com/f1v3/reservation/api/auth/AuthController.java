@@ -1,7 +1,7 @@
 package com.f1v3.reservation.api.auth;
 
-import com.f1v3.reservation.api.user.dto.LoginUserRequest;
-import com.f1v3.reservation.api.user.dto.LoginUserResponse;
+import com.f1v3.reservation.api.auth.dto.LoginRequest;
+import com.f1v3.reservation.api.auth.dto.LoginResponse;
 import com.f1v3.reservation.auth.token.TokenConstants;
 import com.f1v3.reservation.common.api.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -29,8 +29,8 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginUserResponse>> login(@Valid @RequestBody LoginUserRequest request) {
-        LoginUserResponse response = authService.login(request);
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
+        LoginResponse response = authService.login(request);
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", response.refreshToken())
                 .httpOnly(true)

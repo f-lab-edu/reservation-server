@@ -1,7 +1,7 @@
 package com.f1v3.reservation.api.auth;
 
-import com.f1v3.reservation.api.user.dto.LoginUserRequest;
-import com.f1v3.reservation.api.user.dto.LoginUserResponse;
+import com.f1v3.reservation.api.auth.dto.LoginRequest;
+import com.f1v3.reservation.api.auth.dto.LoginResponse;
 import com.f1v3.reservation.auth.token.TokenProperties;
 import com.f1v3.reservation.auth.token.TokenProvider;
 import com.f1v3.reservation.common.api.error.ErrorCode;
@@ -32,7 +32,7 @@ public class AuthService {
 
     private static final String REFRESH_TOKEN_PREFIX = "refresh_token:";
 
-    public LoginUserResponse login(LoginUserRequest request) {
+    public LoginResponse login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new ReservationException(ErrorCode.USER_NOT_FOUND));
@@ -50,6 +50,6 @@ public class AuthService {
                 Duration.ofMillis(tokenProperties.getRefreshTokenExpirationMs())
         );
 
-        return new LoginUserResponse(accessToken, refreshToken);
+        return new LoginResponse(accessToken, refreshToken);
     }
 }
