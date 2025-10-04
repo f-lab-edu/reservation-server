@@ -44,6 +44,15 @@ public enum ErrorCode {
     USER_PHONE_ALREADY_EXISTS(ErrorStatus.CONFLICT, 4302, "이미 등록된 핸드폰 번호입니다."),
 
     /*
+    인증/인가 (Auth) [code: 44xx]
+     */
+    TOKEN_EXPIRED(ErrorStatus.UNAUTHORIZED, 4401, "토큰이 만료되었습니다. 다시 로그인해주세요."),
+    TOKEN_INVALID(ErrorStatus.UNAUTHORIZED, 4402, "유효하지 않은 토큰입니다. 다시 로그인해주세요."),
+    TOKEN_SIGNATURE_INVALID(ErrorStatus.UNAUTHORIZED, 4403, "토큰 시그니처가 유효하지 않습니다. 다시 로그인해주세요."),
+
+    UNAUTHORIZED(ErrorStatus.UNAUTHORIZED, 4404, "인증이 필요합니다. 로그인 후 다시 시도해주세요."),
+
+    /*
     서버 에러 정의
      */
     SERVER_ERROR(ErrorStatus.INTERNAL_SERVER_ERROR, 5000, "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."),
