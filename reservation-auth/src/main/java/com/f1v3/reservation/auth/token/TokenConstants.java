@@ -10,7 +10,7 @@ public class TokenConstants {
     private TokenConstants() {
     }
 
-    public static final String TOKEN_PREFIX = "Bearer ";
+    public static final String ACCESS_TOKEN_PREFIX = "Bearer ";
 
     public static final String KEY_ROLE = "role";
 

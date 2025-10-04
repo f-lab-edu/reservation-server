@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
-import static com.f1v3.reservation.auth.token.TokenConstants.TOKEN_PREFIX;
+import static com.f1v3.reservation.auth.token.TokenConstants.ACCESS_TOKEN_PREFIX;
 
 /**
  * 토큰 인증 필터
@@ -35,8 +35,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String tokenHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if (Objects.nonNull(tokenHeader) && tokenHeader.startsWith(TOKEN_PREFIX)) {
-            String accessToken = tokenHeader.substring(TOKEN_PREFIX.length());
+        if (Objects.nonNull(tokenHeader) && tokenHeader.startsWith(ACCESS_TOKEN_PREFIX)) {
+            String accessToken = tokenHeader.substring(ACCESS_TOKEN_PREFIX.length());
             if (tokenProvider.isTokenValid(accessToken)) {
                 Long userId = tokenProvider.getUserId(accessToken);
                 UserRole role = tokenProvider.getUserRole(accessToken);
