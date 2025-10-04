@@ -6,8 +6,8 @@ import com.f1v3.reservation.api.user.dto.SignupUserResponse;
 import com.f1v3.reservation.common.domain.user.User;
 import com.f1v3.reservation.common.domain.user.enums.Gender;
 import com.f1v3.reservation.common.domain.user.repository.UserRepository;
-import com.f1v3.reservation.common.encoder.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
