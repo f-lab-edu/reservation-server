@@ -1,0 +1,9 @@
+### 로그인 요청
+
+POST http://localhost:8080/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "f1v3@kakao.com",
+  "password": "seungjo123!"
+}

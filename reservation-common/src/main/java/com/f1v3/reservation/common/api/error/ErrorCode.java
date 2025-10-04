@@ -42,6 +42,7 @@ public enum ErrorCode {
      */
     USER_EMAIL_ALREADY_EXISTS(ErrorStatus.CONFLICT, 4301, "이미 등록된 이메일입니다."),
     USER_PHONE_ALREADY_EXISTS(ErrorStatus.CONFLICT, 4302, "이미 등록된 핸드폰 번호입니다."),
+    USER_NOT_FOUND(ErrorStatus.NOT_FOUND, 4303, "사용자를 찾을 수 없습니다."),
 
     /*
     인증/인가 (Auth) [code: 44xx]
