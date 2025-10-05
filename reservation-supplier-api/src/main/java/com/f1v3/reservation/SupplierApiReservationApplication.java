@@ -6,10 +6,10 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan
-public class AdminApiReservationApplication {
+public class SupplierApiReservationApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(AdminApiReservationApplication.class, args);
+        SpringApplication.run(SupplierApiReservationApplication.class, args);
     }
 
 }

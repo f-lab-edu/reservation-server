@@ -9,6 +9,7 @@ jar {
 
 dependencies {
     implementation project(':reservation-common')
+    implementation project(':reservation-auth')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
 }
