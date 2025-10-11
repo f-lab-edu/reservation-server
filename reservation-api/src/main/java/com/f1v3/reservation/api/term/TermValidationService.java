@@ -5,6 +5,7 @@ import com.f1v3.reservation.api.user.dto.SignupUserRequest;
 import com.f1v3.reservation.common.api.error.ReservationException;
 import com.f1v3.reservation.common.domain.term.enums.TermCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -18,6 +19,7 @@ import static com.f1v3.reservation.common.api.error.ErrorCode.TERM_REQUIRED_NOT_
  *
  * @author Seungjo, Jeong
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TermValidationService {
@@ -32,14 +34,14 @@ public class TermValidationService {
 
         Set<TermCode> agreedTermIds = termRequests.stream()
                 .map(request -> TermCode.getCode(request.termCode())
-                        .orElseThrow(() -> new ReservationException(TERM_CODE_INVALID))
+                        .orElseThrow(() -> new ReservationException(TERM_CODE_INVALID, log::warn))
                 )
                 .collect(Collectors.toSet());
 
         requiredTermIds.removeAll(agreedTermIds);
 
         if (!requiredTermIds.isEmpty()) {
-            throw new ReservationException(TERM_REQUIRED_NOT_AGREED);
+            throw new ReservationException(TERM_REQUIRED_NOT_AGREED, log::info);
         }
     }
 }
