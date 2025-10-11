@@ -28,7 +28,7 @@ import static com.f1v3.reservation.auth.token.TokenConstants.PUBLIC_URLS;
  * @author Seungjo, Jeong
  */
 @Configuration
-@EnableWebSecurity(debug = true)
+@EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 

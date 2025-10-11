@@ -52,4 +52,36 @@ public class AuthService {
 
         return new LoginResponse(accessToken, refreshToken);
     }
+
+    public void logout(Long id) {
+        redisRepository.deleteValue(REFRESH_TOKEN_PREFIX + id);
+    }
+
+    public LoginResponse reissue(String refreshToken) {
+        if (!tokenProvider.isTokenValid(refreshToken)) {
+            throw new ReservationException(ErrorCode.TOKEN_INVALID);
+        }
+
+        Long userId = tokenProvider.getUserId(refreshToken);
+        String savedRefreshToken = redisRepository.getValue(REFRESH_TOKEN_PREFIX + userId);
+
+        if (savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {
+            throw new ReservationException(ErrorCode.TOKEN_INVALID);
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ReservationException(ErrorCode.USER_NOT_FOUND));
+
+        String newAccessToken = tokenProvider.generateAccessToken(user.getId(), user.getRole());
+        String newRefreshToken = tokenProvider.generateRefreshToken(user.getId(), user.getRole());
+
+        redisRepository.setValue(
+                REFRESH_TOKEN_PREFIX + user.getId(),
+                newRefreshToken,
+                Duration.ofMillis(tokenProperties.getRefreshTokenExpirationMs())
+        );
+
+        return new LoginResponse(newAccessToken, newRefreshToken);
+
+    }
 }

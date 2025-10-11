@@ -11,6 +11,7 @@ public class TokenConstants {
     }
 
     public static final String ACCESS_TOKEN_PREFIX = "Bearer ";
+    public static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 
     public static final String KEY_ROLE = "role";
 

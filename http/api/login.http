@@ -7,3 +7,16 @@ Content-Type: application/json
   "email": "f1v3@kakao.com",
   "password": "seungjo123!"
 }
+
+### Access Token 재발급 요청
+GET http://localhost:8080/v1/auth/reissue
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NTk2NjM2NDcsImV4cCI6MTc1OTY2NTQ0N30.nezYRugWW8V6sQpLNnetfRJzIsnCArfUNIshSh8xHkqFvfGU-cOydJcxwSX2aCQndmmIUkEkRzbTAqNFL7x1CQ
+Cookie: refreshToken=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NTk2NjM2NDcsImV4cCI6MTc2MDI2ODQ0N30.l8tGVNGKwqBFfidAGSoXha62ndSQE45pbzSDrlN-83MUyzGZ6_sibS-ULW816HESe2_ZUFDe3VBqhLpI9QZ7Ow
+
+### 로그아웃 요청
+
+GET http://localhost:8080/v1/auth/logout
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NTk2NjM1NTEsImV4cCI6MTc1OTY2NTM1MX0.WW0BG7Qg0kc3D9dZPTuFWpn3r9Elmw_rLilZunFcK7YpcHoxqVqcL0wu1G_TlSNabNd0geF_xpiXsVk7DX_TCQ
+Cookie: refreshToken=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NTk2NjM1NTEsImV4cCI6MTc2MDI2ODM1MX0.lzW6sWqWLZH7RjEvsasptIyV9I3Rx4cmnx5RFyRZ8iPIM-gc4CCQXidq4g17_GE5jKq_Pov7zRbFY-j622Nfbw
