@@ -24,4 +24,8 @@ public class RedisRepository {
     public String getValue(String key) {
         return redisTemplate.opsForValue().get(key);
     }
+
+    public void deleteValue(String key) {
+        redisTemplate.delete(key);
+    }
 }
