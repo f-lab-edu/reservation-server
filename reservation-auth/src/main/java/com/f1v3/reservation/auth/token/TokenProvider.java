@@ -66,7 +66,7 @@ public class TokenProvider {
                 .claim(KEY_ROLE, role.name())
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .signWith(secretKey, Jwts.SIG.HS512)
+                .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 
