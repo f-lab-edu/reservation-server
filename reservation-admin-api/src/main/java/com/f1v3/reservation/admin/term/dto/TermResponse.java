@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
  */
 @Builder(access = AccessLevel.PRIVATE)
 public record TermResponse(
-        Long termId,
         TermCode termCode,
         Integer version,
         String title,
@@ -29,7 +28,6 @@ public record TermResponse(
 ) {
     public static TermResponse from(AdminTermDto termDto) {
         return TermResponse.builder()
-                .termId(termDto.termId())
                 .termCode(termDto.termCode())
                 .version(termDto.version())
                 .title(termDto.title())

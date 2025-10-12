@@ -29,9 +29,8 @@ public class TermRepositoryImpl implements TermRepositoryCustom {
                 .select(
                         Projections.constructor(
                                 ActiveTermDto.class,
-                                term.id,
-                                term.code,
-                                term.version,
+                                term.pk.code,
+                                term.pk.version,
                                 term.title,
                                 term.content,
                                 term.isRequired,
@@ -39,6 +38,7 @@ public class TermRepositoryImpl implements TermRepositoryCustom {
                         ))
                 .from(term)
                 .where(isActive(LocalDateTime.now()))
+                .orderBy(term.displayOrder.asc(), term.pk.version.desc())
                 .fetch();
     }
 
@@ -50,9 +50,8 @@ public class TermRepositoryImpl implements TermRepositoryCustom {
                 .select(
                         Projections.constructor(
                                 AdminTermDto.class,
-                                term.id,
-                                term.code,
-                                term.version,
+                                term.pk.code,
+                                term.pk.version,
                                 term.title,
                                 term.content,
                                 term.displayOrder,
@@ -62,7 +61,7 @@ public class TermRepositoryImpl implements TermRepositoryCustom {
                                 term.createdAt,
                                 term.updatedAt))
                 .from(term)
-                .orderBy(term.id.desc())
+                .orderBy(term.displayOrder.asc(), term.pk.version.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();

@@ -5,10 +5,9 @@ DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS terms;
 DROP TABLE IF EXISTS phone_verifications;
 
--- 약관 테이블 (code, version 복합키로 변경해야 함)
+-- 약관 테이블 (복합키 기반 버전 관리)
 CREATE TABLE terms
 (
-    id             BIGINT PRIMARY KEY AUTO_INCREMENT,
     code           VARCHAR(30)  NOT NULL,
     version        INT          NOT NULL,
     title          VARCHAR(100) NOT NULL,
@@ -20,15 +19,7 @@ CREATE TABLE terms
     created_at     DATETIME DEFAULT NOW(),
     updated_at     DATETIME DEFAULT NOW() ON UPDATE NOW(),
 
-    UNIQUE KEY uk_term_code_version (code, version),
-    INDEX idx_term_code (code),
-
-    CONSTRAINT chk_display_order_range
-        CHECK (
-            (is_required = TRUE AND display_order BETWEEN 0 AND 500) OR
-            (is_required = FALSE AND display_order BETWEEN 501 AND 1000
-                )
-            )
+    PRIMARY KEY (code, version)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
@@ -53,11 +44,12 @@ CREATE TABLE user_term_agreements
 (
     id        BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id   BIGINT NOT NULL,
-    term_id   BIGINT NOT NULL,
+    term_code    VARCHAR(30) NOT NULL,
+    term_version INT         NOT NULL,
     agreed_at DATETIME DEFAULT NOW(),
 
     FOREIGN KEY (user_id) REFERENCES users (id),
-    FOREIGN KEY (term_id) REFERENCES terms (id)
+    FOREIGN KEY (term_code, term_version) REFERENCES terms (code, version)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 

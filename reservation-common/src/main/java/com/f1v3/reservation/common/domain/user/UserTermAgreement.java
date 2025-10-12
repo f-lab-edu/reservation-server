@@ -29,7 +29,10 @@ public class UserTermAgreement {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "term_id", nullable = false)
+    @JoinColumns({
+            @JoinColumn(name = "term_code", referencedColumnName = "code", nullable = false),
+            @JoinColumn(name = "term_version", referencedColumnName = "version", nullable = false)
+    })
     private Term term;
 
     @Column(nullable = false, updatable = false)

@@ -56,9 +56,9 @@ public class TermService {
 
         Term newTerm = Term.builder()
                 .code(termCode)
+                .version(nextVersion)
                 .title(request.title())
                 .content(request.content())
-                .version(nextVersion)
                 .displayOrder(request.displayOrder())
                 .isRequired(request.isRequired())
                 .activatedAt(request.activatedAt())
@@ -66,7 +66,10 @@ public class TermService {
                 .build();
 
         Term savedTerm = saveWithConstraintCheck(newTerm);
-        return new CreateTermResponse(savedTerm.getId(), savedTerm.getCode().name(), savedTerm.getVersion());
+        return new CreateTermResponse(
+                savedTerm.getPk().getCode().name(),
+                savedTerm.getPk().getVersion()
+        );
     }
 
     private Term saveWithConstraintCheck(Term term) {
@@ -74,8 +77,8 @@ public class TermService {
             return termRepository.save(term);
         } catch (DataIntegrityViolationException e) {
             Map<String, Object> parameters = Map.of(
-                    "termCode", term.getCode(),
-                    "termVersion", term.getVersion()
+                    "termCode", term.getPk().getCode(),
+                    "termVersion", term.getPk().getVersion()
             );
 
             throw new ReservationException(ErrorCode.TERM_VERSION_CONSTRAINT_VIOLATION, log::error, parameters, e);
