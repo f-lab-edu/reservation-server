@@ -10,6 +10,7 @@ import com.f1v3.reservation.common.domain.user.User;
 import com.f1v3.reservation.common.domain.user.repository.UserRepository;
 import com.f1v3.reservation.common.redis.RedisRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ import java.time.Duration;
  *
  * @author Seungjo, Jeong
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -35,10 +37,10 @@ public class AuthService {
     public LoginResponse login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new ReservationException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ReservationException(ErrorCode.USER_NOT_FOUND, log::info));
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new ReservationException(ErrorCode.USER_NOT_FOUND);
+            throw new ReservationException(ErrorCode.USER_NOT_FOUND, log::info);
         }
 
         String accessToken = tokenProvider.generateAccessToken(user.getId(), user.getRole());
@@ -59,18 +61,18 @@ public class AuthService {
 
     public LoginResponse reissue(String refreshToken) {
         if (!tokenProvider.isTokenValid(refreshToken)) {
-            throw new ReservationException(ErrorCode.TOKEN_INVALID);
+            throw new ReservationException(ErrorCode.TOKEN_INVALID, log::info);
         }
 
         Long userId = tokenProvider.getUserId(refreshToken);
         String savedRefreshToken = redisRepository.getValue(REFRESH_TOKEN_PREFIX + userId);
 
         if (savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {
-            throw new ReservationException(ErrorCode.TOKEN_INVALID);
+            throw new ReservationException(ErrorCode.TOKEN_INVALID, log::info);
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ReservationException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ReservationException(ErrorCode.USER_NOT_FOUND, log::info));
 
         String newAccessToken = tokenProvider.generateAccessToken(user.getId(), user.getRole());
         String newRefreshToken = tokenProvider.generateRefreshToken(user.getId(), user.getRole());
