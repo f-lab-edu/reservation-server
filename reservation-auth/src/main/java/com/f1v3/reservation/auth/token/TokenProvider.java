@@ -9,6 +9,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -21,6 +22,7 @@ import static com.f1v3.reservation.auth.token.TokenConstants.KEY_ROLE;
  *
  * @author Seungjo, Jeong
  */
+@Slf4j
 @Component
 public class TokenProvider {
 
@@ -78,11 +80,11 @@ public class TokenProvider {
                     .parseSignedClaims(token)
                     .getPayload();
         } catch (ExpiredJwtException e) {
-            throw new ReservationException(ErrorCode.TOKEN_EXPIRED);
+            throw new ReservationException(ErrorCode.TOKEN_EXPIRED, log::info);
         } catch (MalformedJwtException e) {
-            throw new ReservationException(ErrorCode.TOKEN_INVALID);
+            throw new ReservationException(ErrorCode.TOKEN_INVALID, log::info);
         } catch (SignatureException e) {
-            throw new ReservationException(ErrorCode.TOKEN_SIGNATURE_INVALID);
+            throw new ReservationException(ErrorCode.TOKEN_SIGNATURE_INVALID, log::info);
         }
     }
 }

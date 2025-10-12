@@ -3,6 +3,7 @@ package com.f1v3.reservation.auth.web.user;
 import com.f1v3.reservation.common.api.error.ErrorCode;
 import com.f1v3.reservation.common.api.error.ReservationException;
 import com.f1v3.reservation.common.domain.user.enums.UserRole;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -18,6 +19,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
  *
  * @author Seungjo, Jeong
  */
+@Slf4j
 @Component
 public class LoginHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
@@ -42,7 +44,7 @@ public class LoginHandlerMethodArgumentResolver implements HandlerMethodArgument
                 .map(role -> role.replace("ROLE_", ""))
                 .map(UserRole::valueOf)
                 .findFirst()
-                .orElseThrow(() -> new ReservationException(ErrorCode.UNAUTHORIZED));
+                .orElseThrow(() -> new ReservationException(ErrorCode.UNAUTHORIZED, log::error));
 
         return new LoginUser(userId, userRole);
     }
