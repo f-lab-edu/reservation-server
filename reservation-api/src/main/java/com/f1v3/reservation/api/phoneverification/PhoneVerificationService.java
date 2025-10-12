@@ -49,7 +49,7 @@ public class PhoneVerificationService {
     @Transactional
     public void incrementAttempt(String phoneNumber) {
         PhoneVerification verification = phoneVerificationRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new ReservationException(PHONE_VERIFICATION_NOT_FOUND));
+                .orElseThrow(() -> new ReservationException(PHONE_VERIFICATION_NOT_FOUND, log::info));
 
         verification.incrementAttempt();
     }
@@ -57,22 +57,22 @@ public class PhoneVerificationService {
     @Transactional
     public void verifyCode(VerifyPhoneVerificationRequest request) {
         PhoneVerification verification = phoneVerificationRepository.findByPhoneNumber(request.phoneNumber())
-                .orElseThrow(() -> new ReservationException(PHONE_VERIFICATION_NOT_FOUND));
+                .orElseThrow(() -> new ReservationException(PHONE_VERIFICATION_NOT_FOUND, log::info));
 
         if (verification.isAlreadyVerified()) {
-            throw new ReservationException(PHONE_VERIFICATION_ALREADY_VERIFIED);
+            throw new ReservationException(PHONE_VERIFICATION_ALREADY_VERIFIED, log::info);
         }
 
         if (verification.isExpired()) {
-            throw new ReservationException(PHONE_VERIFICATION_CODE_EXPIRED);
+            throw new ReservationException(PHONE_VERIFICATION_CODE_EXPIRED, log::info);
         }
 
         if (verification.isExceededMaxAttempts()) {
-            throw new ReservationException(PHONE_VERIFICATION_ATTEMPTS_EXCEEDED);
+            throw new ReservationException(PHONE_VERIFICATION_ATTEMPTS_EXCEEDED, log::info);
         }
 
         if (!verification.checkCode(request.verificationCode())) {
-            throw new ReservationException(PHONE_VERIFICATION_CODE_INVALID);
+            throw new ReservationException(PHONE_VERIFICATION_CODE_INVALID, log::info);
         }
 
         userValidationService.checkPhoneNumberExists(request.phoneNumber());
@@ -84,14 +84,14 @@ public class PhoneVerificationService {
     @Transactional(readOnly = true)
     public void checkVerified(String phoneNumber) {
         PhoneVerification verification = phoneVerificationRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new ReservationException(PHONE_VERIFICATION_NOT_FOUND));
+                .orElseThrow(() -> new ReservationException(PHONE_VERIFICATION_NOT_FOUND, log::info));
 
         if (!verification.isAlreadyVerified()) {
-            throw new ReservationException(PHONE_VERIFICATION_NOT_VERIFIED);
+            throw new ReservationException(PHONE_VERIFICATION_NOT_VERIFIED, log::info);
         }
 
         if (verification.isExpiredForVerifiedDuration()) {
-            throw new ReservationException(PHONE_VERIFICATION_INFO_EXPIRED);
+            throw new ReservationException(PHONE_VERIFICATION_INFO_EXPIRED, log::info);
         }
     }
 

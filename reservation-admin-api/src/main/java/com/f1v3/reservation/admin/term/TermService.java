@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.f1v3.reservation.common.api.error.ErrorCode.TERM_CODE_INVALID;
 
@@ -43,7 +44,7 @@ public class TermService {
     @Transactional
     public CreateTermResponse create(CreateTermRequest request) {
         TermCode termCode = TermCode.getCode(request.code())
-                .orElseThrow(() -> new ReservationException(TERM_CODE_INVALID));
+                .orElseThrow(() -> new ReservationException(TERM_CODE_INVALID, log::warn));
 
         int nextVersion = termRepository.findMaxVersionByCode(termCode)
                 .map(version -> version + 1)
@@ -72,8 +73,12 @@ public class TermService {
         try {
             return termRepository.save(term);
         } catch (DataIntegrityViolationException e) {
-            log.error("Term constraint violation: {}", e.getMessage());
-            throw new ReservationException(ErrorCode.TERM_VERSION_CONSTRAINT_VIOLATION);
+            Map<String, Object> parameters = Map.of(
+                    "termCode", term.getCode(),
+                    "termVersion", term.getVersion()
+            );
+
+            throw new ReservationException(ErrorCode.TERM_VERSION_CONSTRAINT_VIOLATION, log::error, parameters, e);
         }
     }
 }

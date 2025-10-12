@@ -11,4 +11,8 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j'
 
     implementation 'org.mindrot:jbcrypt:0.4'
+
+    implementation 'org.apache.commons:commons-lang3:3.19.0'
+    implementation 'com.google.guava:guava:33.5.0-jre'
+
 }

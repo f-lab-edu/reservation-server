@@ -4,6 +4,7 @@ import com.f1v3.reservation.common.api.error.ErrorCode;
 import com.f1v3.reservation.common.api.error.ReservationException;
 import com.f1v3.reservation.common.domain.phoneverification.PhoneVerification;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
  *
  * @author Seungjo, Jeong
  */
+@Slf4j
 @RequiredArgsConstructor
 public class ResendVerificationStrategy implements PhoneVerificationStrategy {
 
@@ -27,7 +29,7 @@ public class ResendVerificationStrategy implements PhoneVerificationStrategy {
                 .isBefore(LocalDateTime.now());
 
         if (!isResendAllowed) {
-            throw new ReservationException(ErrorCode.PHONE_VERIFICATION_RESEND_NOT_ALLOWED);
+            throw new ReservationException(ErrorCode.PHONE_VERIFICATION_RESEND_NOT_ALLOWED, log::info);
         }
 
         existingVerification.resend(newCode);

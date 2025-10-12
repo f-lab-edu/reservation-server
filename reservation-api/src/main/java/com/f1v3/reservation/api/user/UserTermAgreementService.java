@@ -10,6 +10,7 @@ import com.f1v3.reservation.common.domain.user.User;
 import com.f1v3.reservation.common.domain.user.UserTermAgreement;
 import com.f1v3.reservation.common.domain.user.repository.UserTermAgreementRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import static com.f1v3.reservation.common.api.error.ErrorCode.TERM_NOT_FOUND;
  *
  * @author Seungjo, Jeong
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserTermAgreementService {
@@ -44,10 +46,10 @@ public class UserTermAgreementService {
 
     private UserTermAgreement createAgreement(User user, SignupUserRequest.SignupTermRequest request) {
         TermCode termCode = TermCode.getCode(request.termCode())
-                .orElseThrow(() -> new ReservationException(TERM_NOT_FOUND));
+                .orElseThrow(() -> new ReservationException(TERM_NOT_FOUND, log::warn));
 
         Term term = termRepository.findByCodeAndVersion(termCode, request.version())
-                .orElseThrow(() -> new ReservationException(TERM_NOT_FOUND));
+                .orElseThrow(() -> new ReservationException(TERM_NOT_FOUND, log::warn));
 
         return UserTermAgreement.builder()
                 .user(user)
