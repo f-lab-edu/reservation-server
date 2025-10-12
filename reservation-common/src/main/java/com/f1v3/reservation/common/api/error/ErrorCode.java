@@ -16,37 +16,47 @@ public enum ErrorCode {
     INVALID_REQUEST_PARAMETER(ErrorStatus.BAD_REQUEST, 1000, "요청 값이 올바르지 않습니다. 요청 값을 확인해주세요."),
 
     /*
-    약관(Term) [code: 41xx]
+    약관(Term) [code: 2xxx]
      */
-    TERM_NOT_FOUND(ErrorStatus.NOT_FOUND, 4101, "약관을 찾을 수 없습니다."),
-    TERM_CODE_INVALID(ErrorStatus.BAD_REQUEST, 4102, "올바르지 않은 약관 코드입니다."),
-    TERM_REQUIRED_NOT_AGREED(ErrorStatus.BAD_REQUEST, 4103, "필수 약관에 동의하지 않았습니다."),
-    TERM_VERSION_CONSTRAINT_VIOLATION(ErrorStatus.CONFLICT, 4104, "약관 생성 시 버전 충돌이 발생했습니다. 버전을 확인해주세요."),
-    TERM_REQUIRED_DISPLAY_ORDER_INVALID(ErrorStatus.BAD_REQUEST, 4105, "필수 약관의 표시 순서는 0 ~ 500 사이의 값이어야 합니다."),
-    TERM_OPTIONAL_DISPLAY_ORDER_INVALID(ErrorStatus.BAD_REQUEST, 4106, "선택 약관의 표시 순서는 501 ~ 1000 사이의 값이어야 합니다."),
+    TERM_NOT_FOUND(ErrorStatus.NOT_FOUND, 2001, "약관을 찾을 수 없습니다."),
+    TERM_CODE_INVALID(ErrorStatus.BAD_REQUEST, 2002, "올바르지 않은 약관 코드입니다."),
+    TERM_REQUIRED_NOT_AGREED(ErrorStatus.BAD_REQUEST, 2003, "필수 약관에 동의하지 않았습니다."),
+    TERM_VERSION_CONSTRAINT_VIOLATION(ErrorStatus.CONFLICT, 2004, "약관 생성 시 버전 충돌이 발생했습니다. 버전을 확인해주세요."),
+    TERM_REQUIRED_DISPLAY_ORDER_INVALID(ErrorStatus.BAD_REQUEST, 2005, "필수 약관의 표시 순서는 0 ~ 500 사이의 값이어야 합니다."),
+    TERM_OPTIONAL_DISPLAY_ORDER_INVALID(ErrorStatus.BAD_REQUEST, 2006, "선택 약관의 표시 순서는 501 ~ 1000 사이의 값이어야 합니다."),
 
     /*
-    핸드폰 인증(PhoneVerification) [code: 42xx]
+    핸드폰 인증(PhoneVerification) [code: 3xxx]
      */
-    PHONE_VERIFICATION_NOT_FOUND(ErrorStatus.NOT_FOUND, 4201, "핸드폰 인증 정보를 찾을 수 없습니다."),
-    PHONE_VERIFICATION_CODE_EXPIRED(ErrorStatus.BAD_REQUEST, 4202, "인증번호가 만료되었습니다."),
-    PHONE_VERIFICATION_CODE_INVALID(ErrorStatus.BAD_REQUEST, 4203, "인증번호가 올바르지 않습니다."),
-    PHONE_VERIFICATION_ALREADY_VERIFIED(ErrorStatus.CONFLICT, 4204, "이미 인증된 핸드폰 번호입니다."),
-    PHONE_VERIFICATION_ATTEMPTS_EXCEEDED(ErrorStatus.BAD_REQUEST, 4205, "인증 시도 횟수를 초과했습니다."),
-    PHONE_VERIFICATION_NOT_VERIFIED(ErrorStatus.BAD_REQUEST, 4207, "핸드폰 인증이 완료되지 않았습니다."),
-    PHONE_VERIFICATION_INFO_EXPIRED(ErrorStatus.BAD_REQUEST, 4208, "핸드폰 인증 정보가 만료되었습니다."),
-    PHONE_VERIFICATION_RESEND_NOT_ALLOWED(ErrorStatus.BAD_REQUEST, 4209, "인증번호 재전송은 3분 후에 가능합니다."),
+    PHONE_VERIFICATION_NOT_FOUND(ErrorStatus.NOT_FOUND, 3001, "핸드폰 인증 정보를 찾을 수 없습니다."),
+    PHONE_VERIFICATION_CODE_EXPIRED(ErrorStatus.BAD_REQUEST, 3002, "인증번호가 만료되었습니다."),
+    PHONE_VERIFICATION_CODE_INVALID(ErrorStatus.BAD_REQUEST, 3003, "인증번호가 올바르지 않습니다."),
+    PHONE_VERIFICATION_ALREADY_VERIFIED(ErrorStatus.CONFLICT, 3004, "이미 인증된 핸드폰 번호입니다."),
+    PHONE_VERIFICATION_ATTEMPTS_EXCEEDED(ErrorStatus.BAD_REQUEST, 3005, "인증 시도 횟수를 초과했습니다."),
+    PHONE_VERIFICATION_NOT_VERIFIED(ErrorStatus.BAD_REQUEST, 3007, "핸드폰 인증이 완료되지 않았습니다."),
+    PHONE_VERIFICATION_INFO_EXPIRED(ErrorStatus.BAD_REQUEST, 3008, "핸드폰 인증 정보가 만료되었습니다."),
+    PHONE_VERIFICATION_RESEND_NOT_ALLOWED(ErrorStatus.BAD_REQUEST, 3009, "인증번호 재전송은 3분 후에 가능합니다."),
 
     /*
-    회원(User) [code: 43xx]
+    회원(User) [code: 4xxx]
      */
-    USER_EMAIL_ALREADY_EXISTS(ErrorStatus.CONFLICT, 4301, "이미 등록된 이메일입니다."),
-    USER_PHONE_ALREADY_EXISTS(ErrorStatus.CONFLICT, 4302, "이미 등록된 핸드폰 번호입니다."),
+    USER_EMAIL_ALREADY_EXISTS(ErrorStatus.CONFLICT, 4001, "이미 등록된 이메일입니다."),
+    USER_PHONE_ALREADY_EXISTS(ErrorStatus.CONFLICT, 4002, "이미 등록된 핸드폰 번호입니다."),
+    USER_NOT_FOUND(ErrorStatus.NOT_FOUND, 4003, "사용자를 찾을 수 없습니다."),
 
     /*
-    서버 에러 정의
+    인증/인가 (Auth) [code: 5xxx]
      */
-    SERVER_ERROR(ErrorStatus.INTERNAL_SERVER_ERROR, 5000, "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."),
+    TOKEN_EXPIRED(ErrorStatus.UNAUTHORIZED, 5001, "토큰이 만료되었습니다. 다시 로그인해주세요."),
+    TOKEN_INVALID(ErrorStatus.UNAUTHORIZED, 5002, "유효하지 않은 토큰입니다. 다시 로그인해주세요."),
+    TOKEN_SIGNATURE_INVALID(ErrorStatus.UNAUTHORIZED, 5003, "토큰 시그니처가 유효하지 않습니다. 다시 로그인해주세요."),
+
+    UNAUTHORIZED(ErrorStatus.UNAUTHORIZED, 5004, "인증이 필요합니다. 로그인 후 다시 시도해주세요."),
+
+    /*
+    서버 에러 정의 [code: 6xxx]
+     */
+    SERVER_ERROR(ErrorStatus.INTERNAL_SERVER_ERROR, 6000, "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."),
     ;
 
     private final ErrorStatus status;

@@ -1,8 +1,11 @@
 use reservation;
 
+DROP TABLE IF EXISTS user_term_agreements;
+DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS terms;
+DROP TABLE IF EXISTS phone_verifications;
 
--- terms + term_versions 통합본
+-- 약관 테이블 (code, version 복합키로 변경해야 함)
 CREATE TABLE terms
 (
     id             BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -29,15 +32,7 @@ CREATE TABLE terms
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
-# 활성화된 약관 조회 쿼리 (활성화 시작일 <= 현재 시간 < 활성화 종료일(종료일이 NULL인 경우 무한대))
-SELECT *
-FROM terms
-WHERE activated_at <= NOW()
-  AND (deactivated_at IS NULL OR deactivated_at > NOW());
-
-DROP TABLE IF EXISTS user_term_agreements;
-DROP TABLE IF EXISTS users;
-
+-- 회원 테이블
 CREATE TABLE users
 (
     id            BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -53,6 +48,7 @@ CREATE TABLE users
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
+-- 회원 약관 동의 이력 테이블
 CREATE TABLE user_term_agreements
 (
     id        BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -65,11 +61,9 @@ CREATE TABLE user_term_agreements
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
-desc term_versions;
 
-DROP TABLE IF EXISTS phone_verifications;
 
-# 새로운 인증을 요청할 경우 기존 데이터를 덮어씌우는 방식으로 구현
+-- 휴대폰 인증 테이블 (새로운 인증을 요청할 경우 기존 데이터를 덮어씌우는 방식으로 구현)
 CREATE TABLE phone_verifications
 (
     id                BIGINT PRIMARY KEY AUTO_INCREMENT,

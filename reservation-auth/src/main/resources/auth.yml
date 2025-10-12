@@ -1,0 +1,5 @@
+jwt:
+  token:
+    secretKey: kOaidMCrQnAp8jd6R4ASBAqQThVIPyFc1KorwfYhPiI=
+    accessTokenExpirationMs: 1800000    # 30 minutes
+    refreshTokenExpirationMs: 604800000 # 7 days

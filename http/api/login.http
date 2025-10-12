@@ -1,0 +1,22 @@
+### 로그인 요청
+
+POST http://localhost:8080/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "f1v3@kakao.com",
+  "password": "seungjo123!"
+}
+
+### Access Token 재발급 요청
+GET http://localhost:8080/v1/auth/reissue
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NjAyNDkxNzAsImV4cCI6MTc2MDI1MDk3MH0.s6lLQyoPRWxPmzsbcCLaR5naZxJwZQXH9DnlETAzkUg
+Cookie: refreshToken=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NjAyNDkxNzAsImV4cCI6MTc2MDg1Mzk3MH0.1_G56gJRRKE1x4k36GBlUIlNkFZw49E0zvxnI-jvsnM
+
+### 로그아웃 요청
+
+GET http://localhost:8080/v1/auth/logout
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NjAyNDkxOTMsImV4cCI6MTc2MDI1MDk5M30.Ubh1CZ-4wGJKnOQ99r4iEGaR80g_MQ2Np9P2_dTRTV0
+Cookie: refreshToken=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NjAyNDkxOTMsImV4cCI6MTc2MDg1Mzk5M30.__UpvsusqCCwCRYurn_dfx9UNNCY3euWgne5CNWhExs
