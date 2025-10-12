@@ -3,12 +3,12 @@ package com.f1v3.reservation.admin.term;
 import com.f1v3.reservation.admin.term.dto.CreateTermRequest;
 import com.f1v3.reservation.admin.term.dto.CreateTermResponse;
 import com.f1v3.reservation.admin.term.dto.TermResponse;
+import com.f1v3.reservation.common.api.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,8 +31,8 @@ public class TermController {
      * @param pageable default page = 0, size = 10
      */
     @GetMapping
-    public ResponseEntity<List<TermResponse>> getPagedTerms(@PageableDefault Pageable pageable) {
-        return ResponseEntity.ok(termService.getPagedTerms(pageable));
+    public ApiResponse<List<TermResponse>> getPagedTerms(@PageableDefault Pageable pageable) {
+        return ApiResponse.success(termService.getPagedTerms(pageable));
     }
 
     /**
@@ -42,8 +42,8 @@ public class TermController {
      * @return 생성된 약관의 ID 포함한 응답 DTO
      */
     @PostMapping
-    public ResponseEntity<CreateTermResponse> createTerm(@Valid @RequestBody CreateTermRequest request) {
-        CreateTermResponse response = termService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<CreateTermResponse> createTerm(@Valid @RequestBody CreateTermRequest request) {
+        return ApiResponse.success(termService.create(request));
     }
 }

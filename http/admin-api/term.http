@@ -1,0 +1,16 @@
+### 약관 조회 (페이지네이션)
+GET http://localhost:8081/v1/admin/terms?page=0&size=10
+
+
+### 약관 생성
+POST http://localhost:8081/v1/admin/terms
+Content-Type: application/json
+
+{
+  "code": "TERM_TEST",
+  "title": "약관 생성 테스트",
+  "content": "이 약관은 테스트를 위해 생성되었습니다.",
+  "displayOrder": 1000,
+  "isRequired": false,
+  "activatedAt": "2025-10-03T14:00:00"
+}

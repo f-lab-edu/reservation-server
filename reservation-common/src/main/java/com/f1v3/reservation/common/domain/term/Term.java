@@ -1,5 +1,7 @@
 package com.f1v3.reservation.common.domain.term;
 
+import com.f1v3.reservation.common.api.error.ErrorCode;
+import com.f1v3.reservation.common.api.error.ReservationException;
 import com.f1v3.reservation.common.domain.BaseEntity;
 import com.f1v3.reservation.common.domain.term.enums.TermCode;
 import jakarta.persistence.*;
@@ -7,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +18,7 @@ import java.time.LocalDateTime;
  *
  * @author Seungjo, Jeong
  */
+@Slf4j
 @Getter
 @Entity
 @Table(name = "terms")
@@ -71,11 +75,11 @@ public class Term extends BaseEntity {
     private void validateDisplayOrder() {
         if (Boolean.TRUE.equals(isRequired)) {
             if (displayOrder < 0 || displayOrder > 500) {
-                throw new IllegalArgumentException("필수 약관의 displayOrder는 0에서 500 사이여야 합니다.");
+                throw new ReservationException(ErrorCode.TERM_REQUIRED_DISPLAY_ORDER_INVALID, log::warn);
             }
         } else {
             if (displayOrder < 501 || displayOrder > 1000) {
-                throw new IllegalArgumentException("선택 약관의 displayOrder는 501에서 1000 사이여야 합니다.");
+                throw new ReservationException(ErrorCode.TERM_OPTIONAL_DISPLAY_ORDER_INVALID, log::warn);
             }
         }
     }

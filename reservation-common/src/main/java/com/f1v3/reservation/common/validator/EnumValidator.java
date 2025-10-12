@@ -29,8 +29,8 @@ public class EnumValidator implements ConstraintValidator<EnumValid, String> {
                 }
             }
         }
-
-        context.buildConstraintViolationWithTemplate(value + " is not a valid enum value.")
+        
+        context.buildConstraintViolationWithTemplate(annotation.message())
                 .addConstraintViolation()
                 .disableDefaultConstraintViolation();
 

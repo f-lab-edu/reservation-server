@@ -3,10 +3,7 @@ package com.f1v3.reservation.api.user.dto;
 import com.f1v3.reservation.common.domain.term.enums.TermCode;
 import com.f1v3.reservation.common.domain.user.enums.Gender;
 import com.f1v3.reservation.common.validator.EnumValid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -21,6 +18,7 @@ public record SignupUserRequest(
         String password,
 
         @NotBlank(message = "이메일을 입력해주세요.")
+        @Email(message = "이메일 형식이 올바르지 않습니다.")
         String email,
 
         @NotBlank(message = "닉네임을 입력해주세요.")
@@ -31,6 +29,7 @@ public record SignupUserRequest(
         String phoneNumber,
 
         @NotNull(message = "생년월일을 입력해주세요.")
+        @Past(message = "생년월일은 과거 날짜여야 합니다.")
         LocalDate birth,
 
         @NotBlank(message = "성별을 입력해주세요.")

@@ -29,7 +29,7 @@ public enum Gender {
         this.description = description;
     }
 
-    public static Gender findBy(String value) {
+    public static Gender getGender(String value) {
         return stringToEnum.get(value);
     }
 }
