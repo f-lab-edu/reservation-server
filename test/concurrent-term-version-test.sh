@@ -8,6 +8,7 @@ DATA='{"code":"TERM_TEST","title":"약관 생성 테스트","content":"이 약�
 for i in {1..10}; do
   curl -X POST \
     -H "Content-Type: application/json" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzOSIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc2MDM2NTQ1NSwiZXhwIjoxNzYwMzY3MjU1fQ.Yo1xze0Q8GSX-aWHjgrRMVQNnZlDRcxgcsnVgbgRIWA" \
     -d "$DATA" \
     "$URL" &
 done
