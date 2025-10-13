@@ -44,10 +44,10 @@ public class Term extends BaseEntity {
     private LocalDateTime deactivatedAt;
 
     @Builder
-    private Term(TermCode code, Integer version, String title, String content,
+    private Term(Pk pk, String title, String content,
                  Integer displayOrder, Boolean isRequired,
                  LocalDateTime activatedAt, LocalDateTime deactivatedAt) {
-        this.pk = new Pk(code, version);
+        this.pk = pk;
         this.title = title;
         this.content = content;
         this.displayOrder = displayOrder;
@@ -70,6 +70,12 @@ public class Term extends BaseEntity {
             if (displayOrder < 501 || displayOrder > 1000) {
                 throw new ReservationException(ErrorCode.TERM_OPTIONAL_DISPLAY_ORDER_INVALID, log::warn);
             }
+        }
+    }
+
+    public void changeDeactivatedAt(LocalDateTime deactivatedAt) {
+        if (this.deactivatedAt == null) {
+            this.deactivatedAt = deactivatedAt;
         }
     }
 
