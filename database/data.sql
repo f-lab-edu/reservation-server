@@ -24,12 +24,3 @@ VALUES
 ('TERM_MARKETING', 1, '마케팅 정보 수신 동의 약관', '본 마케팅 정보 수신 동의 약관 동의..', FALSE, 501, '2024-01-01 00:00:00', NULL),
 ('TERM_INFO', 1, '개인정보 수집 및 이용 약관', '본 개인정보 수집 및 이용 약관 동의..', FALSE, 502, '2024-01-01 00:00:00', NULL),
 ('TERM_LOCATION', 1, '위치 정보 이용 약관', '본 위치 정보 이용 약관 동의..', FALSE, 503, '2024-01-01 00:00:00', '2024-01-01 00:00:00');
-
-
-EXPLAIN
-select t.id, t.code, t.title, t.type, t.display_order, tv.version, tv.content
-from term_versions tv
-         join terms t on t.id = tv.term_id
-where t.status = 'ACTIVE'
-  and tv.is_current = 1
-order by t.display_order
