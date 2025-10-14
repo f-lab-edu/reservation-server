@@ -1,9 +1,10 @@
 ### 약관 조회 (페이지네이션)
 GET http://localhost:8081/v1/admin/terms?page=0&size=10
-
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0Iiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzYwMjUyMDYxLCJleHAiOjE3NjAyNTM4NjF9.HRyDKhOWo7gp2wyEjATZDa1JKkbAWt3O0nI3OTn6DgA
 
 ### 약관 생성
 POST http://localhost:8081/v1/admin/terms
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0Iiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzYwMjUyMDYxLCJleHAiOjE3NjAyNTM4NjF9.HRyDKhOWo7gp2wyEjATZDa1JKkbAWt3O0nI3OTn6DgA
 Content-Type: application/json
 
 {

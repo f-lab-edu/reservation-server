@@ -1,0 +1,9 @@
+### 로그인 요청 (추후에 admin 모듈에서 처리해줘야 함)
+
+POST http://localhost:8080/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@admin.com",
+  "password": "admin1234!"
+}

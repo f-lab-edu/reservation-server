@@ -8,7 +8,6 @@ import com.f1v3.reservation.common.domain.term.enums.TermCode;
  * @author Seungjo, Jeong
  */
 public record ActiveTermDto(
-        Long termId,
         TermCode termCode,
         Integer version,
         String title,

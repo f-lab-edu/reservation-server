@@ -1,4 +1,4 @@
-package com.f1v3.reservation.common.validator;
+package com.f1v3.reservation.common.api.validator;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;

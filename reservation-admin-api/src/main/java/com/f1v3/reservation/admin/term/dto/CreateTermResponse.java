@@ -6,7 +6,6 @@ package com.f1v3.reservation.admin.term.dto;
  * @author Seungjo, Jeong
  */
 public record CreateTermResponse(
-        Long id,
         String termCode,
         Integer version
 ) {

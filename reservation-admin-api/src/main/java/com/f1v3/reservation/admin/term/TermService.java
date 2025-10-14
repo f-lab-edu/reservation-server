@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.f1v3.reservation.common.api.error.ErrorCode.TERM_CODE_INVALID;
+import static com.f1v3.reservation.common.api.error.ErrorCode.TERM_NOT_FOUND;
 
 /**
  * 관리자용 약관 서비스
@@ -33,6 +34,8 @@ public class TermService {
 
     private final TermRepository termRepository;
 
+    private static final int EMPTY_VERSION = 0;
+
     public List<TermResponse> getPagedTerms(Pageable pageable) {
         List<AdminTermDto> pagedTerms = termRepository.getPagedTerms(pageable);
 
@@ -43,39 +46,45 @@ public class TermService {
 
     @Transactional
     public CreateTermResponse create(CreateTermRequest request) {
+
         TermCode termCode = TermCode.getCode(request.code())
                 .orElseThrow(() -> new ReservationException(TERM_CODE_INVALID, log::warn));
 
-        int nextVersion = termRepository.findMaxVersionByCode(termCode)
-                .map(version -> version + 1)
-                .orElse(1);
+        int currentVersion = termRepository.findMaxVersionByCode(termCode)
+                .orElse(EMPTY_VERSION);
 
-        if (nextVersion > 1) {
-            termRepository.deactivateBeforeTerm(termCode, request.activatedAt());
+        if (currentVersion > EMPTY_VERSION) {
+            termRepository.findById(new Term.Pk(termCode, currentVersion))
+                    .orElseThrow(() -> new ReservationException(TERM_NOT_FOUND, log::warn))
+                    .changeDeactivatedAt(request.activatedAt());
         }
 
         Term newTerm = Term.builder()
-                .code(termCode)
+                .pk(new Term.Pk(termCode, currentVersion + 1))
                 .title(request.title())
                 .content(request.content())
-                .version(nextVersion)
                 .displayOrder(request.displayOrder())
                 .isRequired(request.isRequired())
                 .activatedAt(request.activatedAt())
                 .deactivatedAt(request.deactivatedAt())
                 .build();
 
-        Term savedTerm = saveWithConstraintCheck(newTerm);
-        return new CreateTermResponse(savedTerm.getId(), savedTerm.getCode().name(), savedTerm.getVersion());
+        saveWithConstraintCheck(newTerm);
+
+        return new CreateTermResponse(
+                newTerm.getPk().getCode().name(),
+                newTerm.getPk().getVersion()
+        );
     }
 
-    private Term saveWithConstraintCheck(Term term) {
+    private void saveWithConstraintCheck(Term term) {
         try {
-            return termRepository.save(term);
+            termRepository.saveAndFlush(term);
         } catch (DataIntegrityViolationException e) {
+            log.info("exception = {}", e.getClass());
             Map<String, Object> parameters = Map.of(
-                    "termCode", term.getCode(),
-                    "termVersion", term.getVersion()
+                    "termCode", term.getPk().getCode(),
+                    "termVersion", term.getPk().getVersion()
             );
 
             throw new ReservationException(ErrorCode.TERM_VERSION_CONSTRAINT_VIOLATION, log::error, parameters, e);

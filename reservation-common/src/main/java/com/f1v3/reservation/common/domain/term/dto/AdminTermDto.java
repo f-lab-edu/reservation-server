@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
  * @author Seungjo, Jeong
  */
 public record AdminTermDto(
-        Long termId,
         TermCode termCode,
         Integer version,
         String title,

@@ -1,8 +1,8 @@
 package com.f1v3.reservation.api.user.dto;
 
+import com.f1v3.reservation.common.api.validator.EnumValid;
 import com.f1v3.reservation.common.domain.term.enums.TermCode;
 import com.f1v3.reservation.common.domain.user.enums.Gender;
-import com.f1v3.reservation.common.validator.EnumValid;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;

@@ -12,7 +12,6 @@ import lombok.Builder;
  */
 @Builder(access = AccessLevel.PRIVATE)
 public record TermResponse(
-        Long termId,
         TermCode termCode,
         Integer version,
         String title,
@@ -22,7 +21,6 @@ public record TermResponse(
 ) {
     public static TermResponse from(ActiveTermDto term) {
         return TermResponse.builder()
-                .termId(term.termId())
                 .termCode(term.termCode())
                 .version(term.version())
                 .title(term.title())

@@ -5,12 +5,10 @@ import com.f1v3.reservation.common.api.error.ReservationException;
 import com.f1v3.reservation.common.domain.BaseEntity;
 import com.f1v3.reservation.common.domain.term.enums.TermCode;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -25,16 +23,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Term extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, unique = true)
-    private TermCode code;
-
-    @Column(nullable = false)
-    private Integer version;
+    @EmbeddedId
+    private Pk pk;
 
     @Column(nullable = false)
     private String title;
@@ -54,11 +44,10 @@ public class Term extends BaseEntity {
     private LocalDateTime deactivatedAt;
 
     @Builder
-    private Term(TermCode code, Integer version, String title, String content,
+    private Term(Pk pk, String title, String content,
                  Integer displayOrder, Boolean isRequired,
                  LocalDateTime activatedAt, LocalDateTime deactivatedAt) {
-        this.code = code;
-        this.version = version;
+        this.pk = pk;
         this.title = title;
         this.content = content;
         this.displayOrder = displayOrder;
@@ -82,5 +71,26 @@ public class Term extends BaseEntity {
                 throw new ReservationException(ErrorCode.TERM_OPTIONAL_DISPLAY_ORDER_INVALID, log::warn);
             }
         }
+    }
+
+    public void changeDeactivatedAt(LocalDateTime deactivatedAt) {
+        if (this.deactivatedAt == null) {
+            this.deactivatedAt = deactivatedAt;
+        }
+    }
+
+    @Embeddable
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @EqualsAndHashCode
+    public static class Pk implements Serializable {
+
+        @Enumerated(EnumType.STRING)
+        @Column(nullable = false)
+        private TermCode code;
+
+        @Column(nullable = false)
+        private Integer version;
     }
 }
