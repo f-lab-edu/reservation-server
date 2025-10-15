@@ -4,6 +4,7 @@ import com.f1v3.reservation.common.domain.accommodation.enums.AccommodationStatu
 import com.f1v3.reservation.common.domain.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -48,7 +49,8 @@ public class AccommodationStatusHistory {
     @Column(nullable = false)
     private LocalDateTime changedAt;
 
-    public AccommodationStatusHistory(Accommodation accommodation, AccommodationStatus previousStatus,
+    @Builder
+    private AccommodationStatusHistory(Accommodation accommodation, AccommodationStatus previousStatus,
                                       AccommodationStatus newStatus, String reason, User changedBy) {
         this.accommodation = accommodation;
         this.previousStatus = previousStatus;
