@@ -5,7 +5,7 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_ROOT_PASSWORD: reservation123!
       MYSQL_DATABASE: reservation
     volumes:
       - ./mysql-init.d:/docker-entrypoint-initdb.d
