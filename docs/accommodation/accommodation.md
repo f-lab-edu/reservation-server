@@ -62,7 +62,7 @@ CREATE TABLE accommodations
     updated_at     DATETIME     NOT NULL DEFAULT NOW() ON UPDATE NOW(),
 
     INDEX idx_status_visible (status, is_visible),
-    FOREIGN KEY (supplier_user_id) REFERENCES users (id)
+    FOREIGN KEY (supplier_id) REFERENCES users (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 ```
