@@ -2,12 +2,12 @@ create database if not exists reservation;
 
 use reservation;
 
+DROP TABLE IF EXISTS accommodation_status_histories;
+DROP TABLE IF EXISTS accommodations;
 DROP TABLE IF EXISTS user_term_agreements;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS terms;
 DROP TABLE IF EXISTS phone_verifications;
-DROP TABLE IF EXISTS accommodation_status_histories;
-DROP TABLE IF EXISTS accommodations;
 
 -- 약관 테이블 (복합키 기반 버전 관리)
 CREATE TABLE terms

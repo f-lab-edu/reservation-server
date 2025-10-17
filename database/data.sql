@@ -1,6 +1,4 @@
 use reservation;
-DROP TABLE term_versions;
-DROP TABLE terms;
 
 desc terms;
 
