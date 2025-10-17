@@ -10,7 +10,7 @@ import java.util.List;
  *
  * @author Seungjo, Jeong
  */
-public interface AccommodationRepository extends JpaRepository<Accommodation, Long> {
+public interface AccommodationRepository extends JpaRepository<Accommodation, Long>, AccommodationRepositoryCustom {
 
     List<Accommodation> findBySupplierId(Long supplierId);
 }
