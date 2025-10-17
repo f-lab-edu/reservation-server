@@ -20,5 +20,6 @@ public class TokenConstants {
             "/v1/terms/**",
             "/v1/users/signup",
             "/v1/auth/**",
+            "/v1/accommodations/**",
     };
 }
