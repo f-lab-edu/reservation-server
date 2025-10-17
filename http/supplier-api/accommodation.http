@@ -1,0 +1,15 @@
+### 숙소 생성 요청
+POST http://localhost:8082/v1/supplier/accommodations
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxNyIsInJvbGUiOiJTVVBQTElFUiIsImlhdCI6MTc2MDU0NDg1OSwiZXhwIjoxNzYwNTQ2NjU5fQ.L5lUvcYwSxq-X6VRk-sPqxRwHy7q6zCXtjGDfmF12Jg
+Content-Type: application/json
+
+{
+  "name": "세인트존스 호텔",
+  "description": "강문해변 앞에 자리 잡아 객실에서 드넓고 아름다운 바다를 감상할 수 있습니다.\n아름다운 대자연과 어우러지는 특별하고도 환상적인 경험을 느낄 수 있습니다.",
+  "address": "강원특별자치도 강릉시 강문동 1-1",
+  "contactNumber": "033-123-1234"
+}
+
+### 숙소 조회 요청
+GET http://localhost:8082/v1/supplier/accommodations
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxNyIsInJvbGUiOiJTVVBQTElFUiIsImlhdCI6MTc2MDU0NDg1OSwiZXhwIjoxNzYwNTQ2NjU5fQ.L5lUvcYwSxq-X6VRk-sPqxRwHy7q6zCXtjGDfmF12Jg
