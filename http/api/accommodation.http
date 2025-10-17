@@ -1,0 +1,3 @@
+### 숙소 검색
+GET http://localhost:8080/v1/accommodations?keyword=세인트존스
+Content-Type: application/json

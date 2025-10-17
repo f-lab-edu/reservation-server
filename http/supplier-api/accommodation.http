@@ -1,6 +1,8 @@
+@token = Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwicm9sZSI6IlNVUFBMSUVSIiwiaWF0IjoxNzYwNjc0MTEzLCJleHAiOjE3NjA2NzU5MTN9.DglWH6aVz2gpGJyTpPQ2yFPbhHNicQWYmpxRRpW0PLk
+
 ### 숙소 생성 요청
 POST http://localhost:8082/v1/supplier/accommodations
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxNyIsInJvbGUiOiJTVVBQTElFUiIsImlhdCI6MTc2MDU0NDg1OSwiZXhwIjoxNzYwNTQ2NjU5fQ.L5lUvcYwSxq-X6VRk-sPqxRwHy7q6zCXtjGDfmF12Jg
+Authorization: {{token}}
 Content-Type: application/json
 
 {
@@ -12,4 +14,4 @@ Content-Type: application/json
 
 ### 숙소 조회 요청
 GET http://localhost:8082/v1/supplier/accommodations
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxNyIsInJvbGUiOiJTVVBQTElFUiIsImlhdCI6MTc2MDU0NDg1OSwiZXhwIjoxNzYwNTQ2NjU5fQ.L5lUvcYwSxq-X6VRk-sPqxRwHy7q6zCXtjGDfmF12Jg
+Authorization: {{token}}
