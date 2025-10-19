@@ -23,4 +23,15 @@ public class AccommodationService {
                 .map(SearchAccommodationResponse::from)
                 .toList();
     }
+
+    public List<SearchAccommodationResponse> searchV2(String keyword) {
+        return accommodationRepository.fullTextSearchByKeyword(keyword).stream()
+                .map(accommodation -> new SearchAccommodationResponse(
+                        accommodation.getName(),
+                        accommodation.getDescription(),
+                        accommodation.getAddress(),
+                        accommodation.getContactNumber()
+                ))
+                .toList();
+    }
 }

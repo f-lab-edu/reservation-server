@@ -31,5 +31,9 @@ public class AccommodationController {
         return ApiResponse.success(response);
     }
 
-
+    @GetMapping("/v2")
+    public ApiResponse<List<SearchAccommodationResponse>> searchV2(@RequestParam String keyword) {
+        List<SearchAccommodationResponse> response = accommodationService.searchV2(keyword);
+        return ApiResponse.success(response);
+    }
 }

@@ -92,6 +92,7 @@ CREATE TABLE accommodations
     created_at     DATETIME DEFAULT NOW(),
     updated_at     DATETIME DEFAULT NOW() ON UPDATE NOW(),
 
+    FULLTEXT INDEX ft_idx_name_address (name, address) WITH PARSER ngram,
     FOREIGN KEY (supplier_id) REFERENCES users (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;

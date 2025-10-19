@@ -34,6 +34,8 @@ public class AccommodationRepositoryImpl implements AccommodationRepositoryCusto
                 .where(
                         accommodation.name.contains(keyword)
                                 .or(accommodation.address.contains(keyword))
-                ).fetch();
+                )
+                .limit(30)
+                .fetch();
     }
 }
