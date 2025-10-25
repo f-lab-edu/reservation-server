@@ -40,6 +40,9 @@ public class Accommodation extends BaseEntity {
     @Column(nullable = false)
     private String contactNumber;
 
+    @Column(nullable = false)
+    private String thumbnail;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AccommodationStatus status;
@@ -48,12 +51,13 @@ public class Accommodation extends BaseEntity {
     private boolean isVisible;
 
     @Builder
-    private Accommodation(User supplier, String name, String description, String address, String contactNumber) {
+    private Accommodation(User supplier, String name, String description, String address, String contactNumber, String thumbnail) {
         this.supplier = supplier;
         this.name = name;
         this.description = description;
         this.address = address;
         this.contactNumber = contactNumber;
+        this.thumbnail = thumbnail;
         this.status = AccommodationStatus.PENDING;
         this.isVisible = false; // 기본값 false, 관리자 승인 후 true
     }

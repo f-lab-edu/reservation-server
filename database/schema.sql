@@ -87,6 +87,7 @@ CREATE TABLE accommodations
     description    TEXT         NOT NULL,
     address        VARCHAR(255) NOT NULL, # 전체 주소 (저장 방식 어떻게 할지 고민해야 함)
     contact_number VARCHAR(20)  NOT NULL,
+    thumbnail      VARCHAR(500) NOT NULL, # 썸네일 이미지 URL
     status         VARCHAR(30)  NOT NULL, # ENUM('PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED')
     is_visible     BOOLEAN      NOT NULL, # 숙소 노출 여부
     created_at     DATETIME DEFAULT NOW(),

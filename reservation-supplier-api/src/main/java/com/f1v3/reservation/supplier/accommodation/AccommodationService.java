@@ -46,6 +46,7 @@ public class AccommodationService {
                 .description(request.description())
                 .address(request.address())
                 .contactNumber(request.contactNumber())
+                .thumbnail(request.thumbnail())
                 .build();
 
         Accommodation savedAccommodation = accommodationRepository.save(accommodation);

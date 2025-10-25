@@ -33,6 +33,7 @@ BEGIN
     DECLARE accommodation_desc TEXT;
     DECLARE accommodation_addr VARCHAR(255);
     DECLARE contact_num VARCHAR(20);
+    DECLARE thumbnail_url VARCHAR(500);
     DECLARE status_val VARCHAR(30);
     DECLARE is_visible_val BOOLEAN;
 
@@ -270,14 +271,18 @@ BEGIN
             ELSE FALSE
         END;
 
+        -- 썸네일 URL 생성 (http://test.com/{숙소번호} 형식)
+        SET thumbnail_url = CONCAT('http://test.com/', i);
+
         -- 데이터 삽입
-        INSERT INTO accommodations (supplier_id, name, description, address, contact_number, status, is_visible, created_at)
+        INSERT INTO accommodations (supplier_id, name, description, address, contact_number, thumbnail, status, is_visible, created_at)
         VALUES (
             supplier_id_val,
             accommodation_name,
             accommodation_desc,
             accommodation_addr,
             contact_num,
+            thumbnail_url,
             status_val,
             is_visible_val,
             DATE_ADD(NOW(), INTERVAL -FLOOR(RAND() * 730) DAY)  -- 최근 2년 내 랜덤 생성일
