@@ -6,6 +6,7 @@ import com.f1v3.reservation.common.api.response.ApiResponse;
 import com.f1v3.reservation.supplier.accommodation.dto.AccommodationResponse;
 import com.f1v3.reservation.supplier.accommodation.dto.CreateAccommodationRequest;
 import com.f1v3.reservation.supplier.accommodation.dto.CreateAccommodationResponse;
+import com.f1v3.reservation.supplier.accommodation.dto.UpdateAccommodationRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -39,5 +40,30 @@ public class AccommodationController {
             @Login LoginUser user
     ) {
         return ApiResponse.success(accommodationService.findAccommodation(user.id()));
+    }
+
+    @GetMapping("/{accommodationId}")
+    public ApiResponse<AccommodationResponse> getDetailAccommodation(
+            @PathVariable Long accommodationId,
+            @Login LoginUser user
+    ) {
+        return ApiResponse.success(accommodationService.getDetailAccommodation(accommodationId, user.id()));
+    }
+
+    @PutMapping("/{accommodationId}")
+    public void updateAccommodation(
+            @PathVariable Long accommodationId,
+            @Valid @RequestBody UpdateAccommodationRequest request,
+            @Login LoginUser user
+    ) {
+        accommodationService.updateAccommodation(accommodationId, request, user.id());
+    }
+
+    @DeleteMapping("/{accommodationId}")
+    public void deleteAccommodation(
+            @PathVariable Long accommodationId,
+            @Login LoginUser user
+    ) {
+        accommodationService.deleteAccommodation(accommodationId, user.id());
     }
 }

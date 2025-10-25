@@ -12,7 +12,8 @@ public record AccommodationResponse(
         String name,
         String description,
         String address,
-        String contactNumber
+        String contactNumber,
+        String thumbnail
 ) {
     public static AccommodationResponse from(Accommodation accommodation) {
         return new AccommodationResponse(
@@ -20,7 +21,8 @@ public record AccommodationResponse(
                 accommodation.getName(),
                 accommodation.getDescription(),
                 accommodation.getAddress(),
-                accommodation.getContactNumber()
+                accommodation.getContactNumber(),
+                accommodation.getThumbnail()
         );
     }
 }

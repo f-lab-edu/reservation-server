@@ -66,4 +66,12 @@ public class Accommodation extends BaseEntity {
         this.status = AccommodationStatus.APPROVED;
         this.isVisible = true;
     }
+
+    public void update(String name, String description, String address, String contactNumber, String thumbnail) {
+        this.name = name;
+        this.description = description;
+        this.address = address;
+        this.contactNumber = contactNumber;
+        this.thumbnail = thumbnail;
+    }
 }

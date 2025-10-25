@@ -12,6 +12,7 @@ import com.f1v3.reservation.common.domain.user.repository.UserRepository;
 import com.f1v3.reservation.supplier.accommodation.dto.AccommodationResponse;
 import com.f1v3.reservation.supplier.accommodation.dto.CreateAccommodationRequest;
 import com.f1v3.reservation.supplier.accommodation.dto.CreateAccommodationResponse;
+import com.f1v3.reservation.supplier.accommodation.dto.UpdateAccommodationRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -64,12 +65,51 @@ public class AccommodationService {
         return new CreateAccommodationResponse(savedAccommodation.getId());
     }
 
-    public List<AccommodationResponse> findAccommodation(Long id) {
+    public List<AccommodationResponse> findAccommodation(Long supplierId) {
         // fixme: 예외를 던지는게 맞을까 아니면 빈 리스트를 반환하는게 맞을까?
-        List<Accommodation> accommodations = accommodationRepository.findBySupplierId(id);
+        List<Accommodation> accommodations = accommodationRepository.findBySupplierId(supplierId);
 
         return accommodations.stream()
                 .map(AccommodationResponse::from)
                 .toList();
+    }
+
+    public AccommodationResponse getDetailAccommodation(Long accommodationId, Long supplierId) {
+        Accommodation accommodation = accommodationRepository.findById(accommodationId)
+                .orElseThrow(() -> new ReservationException(ErrorCode.ACCOMMODATION_NOT_FOUND, log::info));
+
+        validateOwner(accommodation, supplierId);
+        return AccommodationResponse.from(accommodation);
+    }
+
+    @Transactional
+    public void updateAccommodation(Long accommodationId, UpdateAccommodationRequest request, Long supplierId) {
+        Accommodation accommodation = accommodationRepository.findById(accommodationId)
+                .orElseThrow(() -> new ReservationException(ErrorCode.ACCOMMODATION_NOT_FOUND, log::info));
+
+        validateOwner(accommodation, supplierId);
+
+        accommodation.update(
+                request.name(),
+                request.description(),
+                request.address(),
+                request.contactNumber(),
+                request.thumbnail()
+        );
+    }
+
+    @Transactional
+    public void deleteAccommodation(Long accommodationId, Long userId) {
+        Accommodation accommodation = accommodationRepository.findById(accommodationId)
+                .orElseThrow(() -> new ReservationException(ErrorCode.ACCOMMODATION_NOT_FOUND, log::info));
+
+        validateOwner(accommodation, userId);
+        accommodationRepository.delete(accommodation);
+    }
+
+    private void validateOwner(Accommodation accommodation, Long userId) {
+        if (!accommodation.getSupplier().getId().equals(userId)) {
+            throw new ReservationException(ErrorCode.ACCOMMODATION_ACCESS_DENIED, log::info);
+        }
     }
 }
