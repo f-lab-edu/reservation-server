@@ -54,16 +54,15 @@ public class TermService {
                 .orElse(EMPTY_VERSION);
 
         if (currentVersion > EMPTY_VERSION) {
-            termRepository.findById(new Term.Pk(termCode, currentVersion))
+            termRepository.findById(new Term.TermPk(termCode, currentVersion))
                     .orElseThrow(() -> new ReservationException(TERM_NOT_FOUND, log::warn))
                     .changeDeactivatedAt(request.activatedAt());
         }
 
         Term newTerm = Term.builder()
-                .pk(new Term.Pk(termCode, currentVersion + 1))
+                .termPk(new Term.TermPk(termCode, currentVersion + 1))
                 .title(request.title())
                 .content(request.content())
-                .displayOrder(request.displayOrder())
                 .isRequired(request.isRequired())
                 .activatedAt(request.activatedAt())
                 .deactivatedAt(request.deactivatedAt())
@@ -72,8 +71,8 @@ public class TermService {
         saveWithConstraintCheck(newTerm);
 
         return new CreateTermResponse(
-                newTerm.getPk().getCode().name(),
-                newTerm.getPk().getVersion()
+                newTerm.getTermPk().getCode().name(),
+                newTerm.getTermPk().getVersion()
         );
     }
 
@@ -83,8 +82,8 @@ public class TermService {
         } catch (DataIntegrityViolationException e) {
             log.info("exception = {}", e.getClass());
             Map<String, Object> parameters = Map.of(
-                    "termCode", term.getPk().getCode(),
-                    "termVersion", term.getPk().getVersion()
+                    "termCode", term.getTermPk().getCode(),
+                    "termVersion", term.getTermPk().getVersion()
             );
 
             throw new ReservationException(ErrorCode.TERM_VERSION_CONSTRAINT_VIOLATION, log::error, parameters, e);

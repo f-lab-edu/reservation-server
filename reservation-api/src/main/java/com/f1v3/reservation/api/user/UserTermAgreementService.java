@@ -48,7 +48,7 @@ public class UserTermAgreementService {
         TermCode termCode = TermCode.getCode(request.termCode())
                 .orElseThrow(() -> new ReservationException(TERM_NOT_FOUND, log::warn));
 
-        Term term = termRepository.findByPkCodeAndPkVersion(termCode, request.version())
+        Term term = termRepository.findByTermPkCodeAndTermPkVersion(termCode, request.version())
                 .orElseThrow(() -> new ReservationException(TERM_NOT_FOUND, log::warn));
 
         return UserTermAgreement.builder()
