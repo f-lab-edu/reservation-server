@@ -17,7 +17,6 @@ CREATE TABLE terms
     title          VARCHAR(100) NOT NULL,
     content        TEXT         NOT NULL,
     is_required    BOOLEAN      NOT NULL,
-    display_order  INT          NOT NULL, # is_required = 0 ~ 500 , is_optional = 501 ~ 1000
     activated_at   DATETIME     NOT NULL, # 활성 시작일 (약관 적용 시점을 지정해야 함)
     deactivated_at DATETIME     NULL,     # 활성 종료일, 새로운 버전이 나오면 기존 버전에 종료일이 설정됨
     created_at     DATETIME DEFAULT NOW(),
