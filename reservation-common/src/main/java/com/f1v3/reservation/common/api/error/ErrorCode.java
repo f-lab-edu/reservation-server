@@ -60,6 +60,11 @@ public enum ErrorCode {
     ACCOMMODATION_ACCESS_DENIED(ErrorStatus.FORBIDDEN, 6002, "숙소 소유자만 수정/삭제할 수 있습니다."),
 
     /*
+    객실 타입(Room Type) [code: 7xxx]
+     */
+    ROOM_TYPE_NOT_FOUND(ErrorStatus.NOT_FOUND, 7001, "객실 타입을 찾을 수 없습니다."),
+
+    /*
     서버 에러 정의 [code: 9xxx]
      */
     SERVER_ERROR(ErrorStatus.INTERNAL_SERVER_ERROR, 9000, "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."),
