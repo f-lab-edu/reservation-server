@@ -1,0 +1,130 @@
+package com.f1v3.reservation.supplier.room;
+
+import com.f1v3.reservation.common.api.error.ErrorCode;
+import com.f1v3.reservation.common.api.error.ReservationException;
+import com.f1v3.reservation.common.domain.accommodation.Accommodation;
+import com.f1v3.reservation.common.domain.accommodation.repository.AccommodationRepository;
+import com.f1v3.reservation.common.domain.room.RoomType;
+import com.f1v3.reservation.common.domain.room.RoomUnit;
+import com.f1v3.reservation.common.domain.room.repository.RoomTypeRepository;
+import com.f1v3.reservation.common.domain.room.repository.RoomUnitRepository;
+import com.f1v3.reservation.supplier.room.dto.CreateRoomTypeRequest;
+import com.f1v3.reservation.supplier.room.dto.RoomTypeResponse;
+import com.f1v3.reservation.supplier.room.dto.UpdateRoomTypeRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+/**
+ * 객실 타입 서비스 - 공급자용
+ *
+ * @author Seungjo, Jeong
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class RoomTypeService {
+
+    private final AccommodationRepository accommodationRepository;
+    private final RoomTypeRepository roomTypeRepository;
+    private final RoomUnitRepository roomUnitRepository;
+
+    @Transactional
+    public void create(Long accommodationId, CreateRoomTypeRequest request) {
+        Accommodation accommodation = accommodationRepository.findById(accommodationId)
+                .orElseThrow(() -> new ReservationException(ErrorCode.ACCOMMODATION_NOT_FOUND, log::info));
+
+        RoomType roomType = RoomType.builder()
+                .accommodation(accommodation)
+                .name(request.name())
+                .description(request.description())
+                .standardCapacity(request.standardCapacity())
+                .maxCapacity(request.maxCapacity())
+                .totalRoomCount(request.totalRoomCount())
+                .basePrice(request.basePrice())
+                .thumbnail(request.thumbnail())
+                .build();
+
+        roomTypeRepository.save(roomType);
+
+        for (String roomNumber : request.roomNumbers()) {
+            RoomUnit roomUnit = RoomUnit.builder()
+                    .roomType(roomType)
+                    .roomNumber(roomNumber)
+                    .build();
+
+            roomUnitRepository.save(roomUnit);
+        }
+    }
+
+    public List<RoomTypeResponse> getRoomTypes(Long accommodationId) {
+        if (!accommodationRepository.existsById(accommodationId)) {
+            throw new ReservationException(ErrorCode.ACCOMMODATION_NOT_FOUND, log::info);
+        }
+
+        List<RoomType> roomTypes = roomTypeRepository.findByAccommodationId(accommodationId);
+
+        return roomTypes.stream()
+                .map(RoomTypeResponse::from)
+                .toList();
+    }
+
+    public RoomTypeResponse getRoomType(Long accommodationId, Long roomTypeId) {
+        if (!accommodationRepository.existsById(accommodationId)) {
+            throw new ReservationException(ErrorCode.ACCOMMODATION_NOT_FOUND, log::info);
+        }
+
+        RoomType roomType = roomTypeRepository.findById(roomTypeId)
+                .orElseThrow(() -> new ReservationException(ErrorCode.ROOM_TYPE_NOT_FOUND, log::info));
+
+        return new RoomTypeResponse(
+                roomType.getId(),
+                roomType.getName(),
+                roomType.getDescription(),
+                roomType.getStandardCapacity(),
+                roomType.getMaxCapacity(),
+                roomType.getTotalRoomCount(),
+                roomType.getBasePrice(),
+                roomType.getThumbnail()
+        );
+    }
+
+    @Transactional
+    public void update(Long accommodationId, Long roomTypeId, UpdateRoomTypeRequest request) {
+        if (!accommodationRepository.existsById(accommodationId)) {
+            throw new ReservationException(ErrorCode.ACCOMMODATION_NOT_FOUND, log::info);
+        }
+
+        RoomType roomType = roomTypeRepository.findById(roomTypeId)
+                .orElseThrow(() -> new ReservationException(ErrorCode.ROOM_TYPE_NOT_FOUND, log::info));
+
+        roomType.updateDetails(
+                request.name(),
+                request.description(),
+                request.standardCapacity(),
+                request.maxCapacity(),
+                request.basePrice(),
+                request.totalRoomCount(),
+                request.thumbnail()
+        );
+    }
+
+    @Transactional
+    public void delete(Long accommodationId, Long roomTypeId) {
+        if (!accommodationRepository.existsById(accommodationId)) {
+            throw new ReservationException(ErrorCode.ACCOMMODATION_NOT_FOUND, log::info);
+        }
+
+        if (!roomTypeRepository.existsById(roomTypeId)) {
+            throw new ReservationException(ErrorCode.ROOM_TYPE_NOT_FOUND, log::info);
+        }
+
+        // Soft Delete 처리
+        roomTypeRepository.deleteById(roomTypeId);
+    }
+
+
+}
