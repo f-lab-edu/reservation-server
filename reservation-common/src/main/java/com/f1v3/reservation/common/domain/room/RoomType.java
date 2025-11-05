@@ -1,13 +1,12 @@
 package com.f1v3.reservation.common.domain.room;
 
+import com.f1v3.reservation.common.domain.BaseEntity;
 import com.f1v3.reservation.common.domain.accommodation.Accommodation;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 
@@ -20,10 +19,8 @@ import java.math.BigDecimal;
 @Getter
 @Entity
 @Table(name = "room_types")
-@SQLDelete(sql = "UPDATE room_types SET isActive = true WHERE id = ?")
-@SQLRestriction("isActive = true")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class RoomType {
+public class RoomType extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,7 +30,7 @@ public class RoomType {
     @JoinColumn(name = "accommodation_id", nullable = false)
     private Accommodation accommodation;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String name;
 
     @Column(nullable = false, columnDefinition = "TEXT")
@@ -51,11 +48,8 @@ public class RoomType {
     @Column(nullable = false)
     private Integer totalRoomCount;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false, length = 255)
     private String thumbnail;
-
-    @Column(nullable = false)
-    private boolean isActive;
 
     @Builder
     private RoomType(Accommodation accommodation, String name, String description,
@@ -69,7 +63,6 @@ public class RoomType {
         this.basePrice = basePrice;
         this.totalRoomCount = totalRoomCount;
         this.thumbnail = thumbnail;
-        this.isActive = true;
     }
 
     public void updateDetails(String name, String description, int standardCapacity, int maxCapacity,

@@ -1,5 +1,6 @@
 package com.f1v3.reservation.common.domain.room;
 
+import com.f1v3.reservation.common.domain.BaseEntity;
 import com.f1v3.reservation.common.domain.room.enums.RoomUnitStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -17,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "room_units")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class RoomUnit {
+public class RoomUnit extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
