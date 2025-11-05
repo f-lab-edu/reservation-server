@@ -4,11 +4,11 @@ import lombok.Getter;
 
 @Getter
 public enum RoomUnitStatus {
-    AVAILABLE("사용 가능"),
+    AVAILABLE("예약 가능"),
     OCCUPIED("투숙 중"),
     MAINTENANCE("수리/정비 중"),
     CLEANING("청소 중"),
-    OUT_OF_SERVICE("사용 불가");
+    OUT_OF_SERVICE("예약 불가");
 
     private final String description;
 
