@@ -9,6 +9,7 @@ import com.f1v3.reservation.common.domain.room.RoomUnit;
 import com.f1v3.reservation.common.domain.room.repository.RoomTypeRepository;
 import com.f1v3.reservation.common.domain.room.repository.RoomUnitRepository;
 import com.f1v3.reservation.supplier.room.dto.CreateRoomTypeRequest;
+import com.f1v3.reservation.supplier.room.dto.CreateRoomTypeResponse;
 import com.f1v3.reservation.supplier.room.dto.RoomTypeResponse;
 import com.f1v3.reservation.supplier.room.dto.UpdateRoomTypeRequest;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +36,7 @@ public class RoomTypeService {
     private final RoomUnitRepository roomUnitRepository;
 
     @Transactional
-    public void create(Long accommodationId, CreateRoomTypeRequest request) {
+    public CreateRoomTypeResponse create(Long accommodationId, CreateRoomTypeRequest request) {
 
         validateCapacity(request);
         validateRoomCount(request);
@@ -54,7 +55,7 @@ public class RoomTypeService {
                 .thumbnail(request.thumbnail())
                 .build();
 
-        roomTypeRepository.save(roomType);
+        RoomType savedRoomType = roomTypeRepository.save(roomType);
 
         for (String roomNumber : request.roomNumbers()) {
             RoomUnit roomUnit = RoomUnit.builder()
@@ -64,6 +65,8 @@ public class RoomTypeService {
 
             roomUnitRepository.save(roomUnit);
         }
+
+        return new CreateRoomTypeResponse(savedRoomType.getId());
     }
 
     public List<RoomTypeResponse> getRoomTypes(Long accommodationId) {

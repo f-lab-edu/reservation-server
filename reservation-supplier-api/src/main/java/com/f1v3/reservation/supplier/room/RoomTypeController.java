@@ -2,8 +2,10 @@ package com.f1v3.reservation.supplier.room;
 
 import com.f1v3.reservation.common.api.response.ApiResponse;
 import com.f1v3.reservation.supplier.room.dto.CreateRoomTypeRequest;
+import com.f1v3.reservation.supplier.room.dto.CreateRoomTypeResponse;
 import com.f1v3.reservation.supplier.room.dto.RoomTypeResponse;
 import com.f1v3.reservation.supplier.room.dto.UpdateRoomTypeRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -24,11 +26,12 @@ public class RoomTypeController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void createRoomType(
+    public ApiResponse<CreateRoomTypeResponse> createRoomType(
             @PathVariable Long accommodationId,
-            @RequestBody CreateRoomTypeRequest request
+            @Valid @RequestBody CreateRoomTypeRequest request
     ) {
-        roomTypeService.create(accommodationId, request);
+        CreateRoomTypeResponse response = roomTypeService.create(accommodationId, request);
+        return ApiResponse.success(response);
     }
 
     @GetMapping
