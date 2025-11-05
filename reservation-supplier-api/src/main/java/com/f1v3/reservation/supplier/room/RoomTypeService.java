@@ -16,7 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 객실 타입 서비스 - 공급자용
@@ -34,6 +36,10 @@ public class RoomTypeService {
 
     @Transactional
     public void create(Long accommodationId, CreateRoomTypeRequest request) {
+
+        validateCapacity(request);
+        validateRoomCount(request);
+
         Accommodation accommodation = accommodationRepository.findById(accommodationId)
                 .orElseThrow(() -> new ReservationException(ErrorCode.ACCOMMODATION_NOT_FOUND, log::info));
 
@@ -122,9 +128,26 @@ public class RoomTypeService {
             throw new ReservationException(ErrorCode.ROOM_TYPE_NOT_FOUND, log::info);
         }
 
-        // Soft Delete 처리
+        // Soft Delete 처리를 해야할까?
         roomTypeRepository.deleteById(roomTypeId);
     }
 
+    private void validateRoomCount(CreateRoomTypeRequest request) {
+        if (request.roomNumbers().size() != request.totalRoomCount()) {
+            Map<String, Object> details = new HashMap<>();
+            details.put("roomNumbersCount", request.roomNumbers().size());
+            details.put("totalRoomCount", request.totalRoomCount());
+            throw new ReservationException(ErrorCode.INVALID_REQUEST_PARAMETER, log::info, details);
+        }
+    }
+
+    private void validateCapacity(CreateRoomTypeRequest request) {
+        if (request.standardCapacity() > request.maxCapacity()) {
+            Map<String, Object> details = new HashMap<>();
+            details.put("standardCapacity", request.standardCapacity());
+            details.put("maxCapacity", request.maxCapacity());
+            throw new ReservationException(ErrorCode.INVALID_REQUEST_PARAMETER, log::info, details);
+        }
+    }
 
 }
