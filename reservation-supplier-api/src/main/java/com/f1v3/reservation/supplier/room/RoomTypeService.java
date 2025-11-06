@@ -6,6 +6,7 @@ import com.f1v3.reservation.common.domain.accommodation.Accommodation;
 import com.f1v3.reservation.common.domain.accommodation.repository.AccommodationRepository;
 import com.f1v3.reservation.common.domain.room.RoomType;
 import com.f1v3.reservation.common.domain.room.RoomUnit;
+import com.f1v3.reservation.common.domain.room.dto.RoomResponseDto;
 import com.f1v3.reservation.common.domain.room.repository.RoomTypeRepository;
 import com.f1v3.reservation.common.domain.room.repository.RoomUnitRepository;
 import com.f1v3.reservation.supplier.room.dto.CreateRoomTypeRequest;
@@ -74,7 +75,9 @@ public class RoomTypeService {
             throw new ReservationException(ErrorCode.ACCOMMODATION_NOT_FOUND, log::info);
         }
 
-        List<RoomType> roomTypes = roomTypeRepository.findByAccommodationId(accommodationId);
+        // RoomUnit 조회도 같이 해줘야 함
+        List<RoomResponseDto> roomTypes = roomTypeRepository.findRoomsByAccommodationId(accommodationId);
+//        List<RoomType> roomTypes = roomTypeRepository.findByAccommodationId(accommodationId);
 
         return roomTypes.stream()
                 .map(RoomTypeResponse::from)
@@ -89,16 +92,7 @@ public class RoomTypeService {
         RoomType roomType = roomTypeRepository.findById(roomTypeId)
                 .orElseThrow(() -> new ReservationException(ErrorCode.ROOM_TYPE_NOT_FOUND, log::info));
 
-        return new RoomTypeResponse(
-                roomType.getId(),
-                roomType.getName(),
-                roomType.getDescription(),
-                roomType.getStandardCapacity(),
-                roomType.getMaxCapacity(),
-                roomType.getTotalRoomCount(),
-                roomType.getBasePrice(),
-                roomType.getThumbnail()
-        );
+        return null;
     }
 
     @Transactional

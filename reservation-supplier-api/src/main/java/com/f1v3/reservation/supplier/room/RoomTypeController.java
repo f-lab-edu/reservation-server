@@ -67,5 +67,4 @@ public class RoomTypeController {
     ) {
         roomTypeService.delete(accommodationId, roomTypeId);
     }
-
 }
