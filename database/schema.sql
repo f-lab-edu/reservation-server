@@ -2,6 +2,8 @@ create database if not exists reservation;
 
 use reservation;
 
+DROP TABLE IF EXISTS room_units;
+DROP TABLE IF EXISTS room_types;
 DROP TABLE IF EXISTS accommodation_status_histories;
 DROP TABLE IF EXISTS accommodations;
 DROP TABLE IF EXISTS user_term_agreements;
@@ -110,5 +112,39 @@ CREATE TABLE accommodation_status_histories
 
     FOREIGN KEY (accommodation_id) REFERENCES accommodations (id),
     FOREIGN KEY (changed_by) REFERENCES users (id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+-- 객실 타입 테이블
+CREATE TABLE room_types
+(
+    id                BIGINT PRIMARY KEY AUTO_INCREMENT,
+    accommodation_id  BIGINT         NOT NULL,
+    name              VARCHAR(100)   NOT NULL,
+    description       TEXT           NOT NULL,
+    standard_capacity INT            NOT NULL, # 표준 인원 수
+    max_capacity      INT            NOT NULL, # 최대 인원 수
+    base_price        DECIMAL(10, 2) NOT NULL, # 기본 요금
+    total_room_count  INT            NOT NULL,
+    thumbnail         VARCHAR(255)   NOT NULL, # 썸네일 이미지 URL
+    created_at        DATETIME DEFAULT NOW(),
+    updated_at        DATETIME DEFAULT NOW() ON UPDATE NOW(),
+    FOREIGN KEY (accommodation_id) REFERENCES accommodations (id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+-- 객실 유닛 테이블
+CREATE TABLE room_units
+(
+    id           BIGINT PRIMARY KEY AUTO_INCREMENT,
+    room_type_id BIGINT       NOT NULL,
+    room_number  VARCHAR(20)  NOT NULL,
+    status       VARCHAR(30)  NOT NULL,
+    notes        VARCHAR(255) NULL, # 객실 유닛에 대한 추가 정보
+    created_at   DATETIME DEFAULT NOW(),
+    updated_at   DATETIME DEFAULT NOW() ON UPDATE NOW(),
+
+    FOREIGN KEY (room_type_id) REFERENCES room_types (id),
+    UNIQUE KEY uk_room_type_id_room_number (room_type_id, room_number)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
