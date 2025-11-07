@@ -13,10 +13,10 @@ import java.util.Optional;
  *
  * @author Seungjo, Jeong
  */
-public interface TermRepository extends JpaRepository<Term, Term.Pk>, TermRepositoryCustom {
+public interface TermRepository extends JpaRepository<Term, Term.TermPk>, TermRepositoryCustom {
 
     @Query("SELECT MAX(t.pk.version) FROM Term t WHERE t.pk.code = :termCode")
     Optional<Integer> findMaxVersionByCode(@Param("termCode") TermCode termCode);
 
-    Optional<Term> findByPkCodeAndPkVersion(TermCode code, Integer version);
+    Optional<Term> findByTermPkCodeAndTermPkVersion(TermCode code, Integer version);
 }

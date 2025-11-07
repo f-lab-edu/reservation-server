@@ -54,9 +54,15 @@ public enum ErrorCode {
     UNAUTHORIZED(ErrorStatus.UNAUTHORIZED, 5004, "인증이 필요합니다. 로그인 후 다시 시도해주세요."),
 
     /*
-    서버 에러 정의 [code: 6xxx]
+    숙소(Accommodation) [code: 6xxx]
      */
-    SERVER_ERROR(ErrorStatus.INTERNAL_SERVER_ERROR, 6000, "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."),
+    ACCOMMODATION_NOT_FOUND(ErrorStatus.NOT_FOUND, 6001, "숙소를 찾을 수 없습니다."),
+    ACCOMMODATION_ACCESS_DENIED(ErrorStatus.FORBIDDEN, 6002, "숙소 소유자만 수정/삭제할 수 있습니다."),
+
+    /*
+    서버 에러 정의 [code: 9xxx]
+     */
+    SERVER_ERROR(ErrorStatus.INTERNAL_SERVER_ERROR, 9000, "서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요."),
     ;
 
     private final ErrorStatus status;

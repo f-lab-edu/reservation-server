@@ -1,7 +1,5 @@
 package com.f1v3.reservation.common.domain.term;
 
-import com.f1v3.reservation.common.api.error.ErrorCode;
-import com.f1v3.reservation.common.api.error.ReservationException;
 import com.f1v3.reservation.common.domain.BaseEntity;
 import com.f1v3.reservation.common.domain.term.enums.TermCode;
 import jakarta.persistence.*;
@@ -24,16 +22,13 @@ import java.time.LocalDateTime;
 public class Term extends BaseEntity {
 
     @EmbeddedId
-    private Pk pk;
+    private TermPk termPk;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 30)
     private String title;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 21844)
     private String content;
-
-    @Column(nullable = false)
-    private Integer displayOrder;
 
     @Column(nullable = false)
     private Boolean isRequired;
@@ -41,36 +36,18 @@ public class Term extends BaseEntity {
     @Column(nullable = false)
     private LocalDateTime activatedAt;
 
+    @Column(nullable = true)
     private LocalDateTime deactivatedAt;
 
     @Builder
-    private Term(Pk pk, String title, String content,
-                 Integer displayOrder, Boolean isRequired,
+    private Term(TermPk termPk, String title, String content, Boolean isRequired,
                  LocalDateTime activatedAt, LocalDateTime deactivatedAt) {
-        this.pk = pk;
+        this.termPk = termPk;
         this.title = title;
         this.content = content;
-        this.displayOrder = displayOrder;
         this.isRequired = isRequired;
         this.activatedAt = activatedAt;
         this.deactivatedAt = deactivatedAt;
-
-        validateDisplayOrder();
-    }
-
-    /**
-     * 필수 약관: 0 ~ 500번, 선택 약관: 501 ~ 1000번
-     */
-    private void validateDisplayOrder() {
-        if (Boolean.TRUE.equals(isRequired)) {
-            if (displayOrder < 0 || displayOrder > 500) {
-                throw new ReservationException(ErrorCode.TERM_REQUIRED_DISPLAY_ORDER_INVALID, log::warn);
-            }
-        } else {
-            if (displayOrder < 501 || displayOrder > 1000) {
-                throw new ReservationException(ErrorCode.TERM_OPTIONAL_DISPLAY_ORDER_INVALID, log::warn);
-            }
-        }
     }
 
     public void changeDeactivatedAt(LocalDateTime deactivatedAt) {
@@ -84,7 +61,7 @@ public class Term extends BaseEntity {
     @NoArgsConstructor
     @AllArgsConstructor
     @EqualsAndHashCode
-    public static class Pk implements Serializable {
+    public static class TermPk implements Serializable {
 
         @Enumerated(EnumType.STRING)
         @Column(nullable = false)

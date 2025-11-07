@@ -1,5 +1,9 @@
+create database if not exists reservation;
+
 use reservation;
 
+DROP TABLE IF EXISTS accommodation_status_histories;
+DROP TABLE IF EXISTS accommodations;
 DROP TABLE IF EXISTS user_term_agreements;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS terms;
@@ -13,7 +17,6 @@ CREATE TABLE terms
     title          VARCHAR(100) NOT NULL,
     content        TEXT         NOT NULL,
     is_required    BOOLEAN      NOT NULL,
-    display_order  INT          NOT NULL, # is_required = 0 ~ 500 , is_optional = 501 ~ 1000
     activated_at   DATETIME     NOT NULL, # 활성 시작일 (약관 적용 시점을 지정해야 함)
     deactivated_at DATETIME     NULL,     # 활성 종료일, 새로운 버전이 나오면 기존 버전에 종료일이 설정됨
     created_at     DATETIME DEFAULT NOW(),
@@ -70,5 +73,42 @@ CREATE TABLE phone_verifications
     updated_at        DATETIME             DEFAULT NOW() ON UPDATE NOW(),
 
     UNIQUE KEY uk_phone_number (phone_number)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+
+-- 숙소 테이블
+CREATE TABLE accommodations
+(
+    id             BIGINT PRIMARY KEY AUTO_INCREMENT,
+    supplier_id    BIGINT       NOT NULL, # 숙소 등록한 공급자 (users 테이블의 id 참조)
+    name           VARCHAR(100) NOT NULL,
+    description    TEXT         NOT NULL,
+    address        VARCHAR(255) NOT NULL, # 전체 주소 (저장 방식 어떻게 할지 고민해야 함)
+    contact_number VARCHAR(20)  NOT NULL,
+    thumbnail      VARCHAR(500) NOT NULL, # 썸네일 이미지 URL
+    status         VARCHAR(30)  NOT NULL, # ENUM('PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED')
+    is_visible     BOOLEAN      NOT NULL, # 숙소 노출 여부
+    created_at     DATETIME DEFAULT NOW(),
+    updated_at     DATETIME DEFAULT NOW() ON UPDATE NOW(),
+
+    FULLTEXT INDEX ft_idx_name_address (name, address) WITH PARSER ngram,
+    FOREIGN KEY (supplier_id) REFERENCES users (id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+-- 숙소 상태 변경 이력 테이블
+CREATE TABLE accommodation_status_histories
+(
+    id               BIGINT PRIMARY KEY AUTO_INCREMENT,
+    accommodation_id BIGINT      NOT NULL,
+    previous_status  VARCHAR(30) NOT NULL,
+    new_status       VARCHAR(30) NOT NULL,
+    reason           TEXT        NULL,     # 상태 변경 사유 (공급자 또는 관리자 입력)
+    changed_by       BIGINT      NOT NULL, # 상태 변경한 사용자 (users 테이블의 id 참조)
+    changed_at       DATETIME DEFAULT NOW(),
+
+    FOREIGN KEY (accommodation_id) REFERENCES accommodations (id),
+    FOREIGN KEY (changed_by) REFERENCES users (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;

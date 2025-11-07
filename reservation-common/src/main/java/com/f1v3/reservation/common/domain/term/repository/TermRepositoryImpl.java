@@ -29,16 +29,15 @@ public class TermRepositoryImpl implements TermRepositoryCustom {
                 .select(
                         Projections.constructor(
                                 ActiveTermDto.class,
-                                term.pk.code,
-                                term.pk.version,
+                                term.termPk.code,
+                                term.termPk.version,
                                 term.title,
                                 term.content,
-                                term.isRequired,
-                                term.displayOrder
+                                term.isRequired
                         ))
                 .from(term)
                 .where(isActive(LocalDateTime.now()))
-                .orderBy(term.displayOrder.asc(), term.pk.version.desc())
+                .orderBy(term.termPk.code.asc(), term.termPk.version.desc(), term.createdAt.desc())
                 .fetch();
     }
 
@@ -50,18 +49,17 @@ public class TermRepositoryImpl implements TermRepositoryCustom {
                 .select(
                         Projections.constructor(
                                 AdminTermDto.class,
-                                term.pk.code,
-                                term.pk.version,
+                                term.termPk.code,
+                                term.termPk.version,
                                 term.title,
                                 term.content,
-                                term.displayOrder,
                                 term.isRequired,
                                 term.activatedAt,
                                 term.deactivatedAt,
                                 term.createdAt,
                                 term.updatedAt))
                 .from(term)
-                .orderBy(term.displayOrder.asc(), term.pk.version.desc())
+                .orderBy(term.termPk.code.asc(), term.termPk.version.desc(), term.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
