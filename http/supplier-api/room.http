@@ -1,0 +1,57 @@
+@token = Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwicm9sZSI6IlNVUFBMSUVSIiwiaWF0IjoxNzYyNDE0NjE5LCJleHAiOjE3NjI0MTY0MTl9.fZNZNJCIz4y_YQFzfKdApJo7mRMcycJ06QVrkaRRG1Q
+
+### 객실 생성 (객실 타입과 객실 유닛 함께 생성됨)
+POST localhost:8082/v1/supplier/accommodations/1/room-types
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "디럭스 더블룸",
+  "description": "넓고 쾌적한 디럭스룸으로 오션뷰를 감상할 수 있습니다. 킹사이즈 침대와 프리미엄 어메니티가 제공됩니다.",
+  "basePrice": 150000,
+  "standardCapacity": 2,
+  "maxCapacity": 3,
+  "totalRoomCount": 6,
+  "thumbnail": "https://example.com/rooms/deluxe-double.jpg",
+  "roomNumbers": [
+    "101",
+    "102",
+    "103",
+    "201",
+    "202",
+    "301"
+  ]
+}
+
+### 객실 생성 (숙소가 존재하지 않는 경우)
+POST localhost:8082/v1/supplier/accommodations/100/room-types
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "디럭스 더블룸",
+  "description": "넓고 쾌적한 디럭스룸으로 오션뷰를 감상할 수 있습니다. 킹사이즈 침대와 프리미엄 어메니티가 제공됩니다.",
+  "basePrice": 150000,
+  "standardCapacity": 2,
+  "maxCapacity": 3,
+  "totalRoomCount": 6,
+  "thumbnail": "https://example.com/rooms/deluxe-double.jpg",
+  "roomNumbers": [
+    "101",
+    "102",
+    "103",
+    "201",
+    "202",
+    "301"
+  ]
+}
+
+### 객실 타입 조회
+GET localhost:8082/v1/supplier/accommodations/1/room-types
+Authorization: {{token}}
+Content-Type: application/json
+
+### 객실 타입 상세 조회
+GET localhost:8082/v1/supplier/accommodations/1/room-types/1
+Authorization: {{token}}
+Content-Type: application/json
