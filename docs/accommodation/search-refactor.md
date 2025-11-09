@@ -254,15 +254,15 @@ LIMIT :limit OFFSET :offset
 
 ```mermaid
 flowchart LR
-    A[1️⃣ room_types 조회] --> B[2️⃣ 인원 필터링]
-    B --> C[3️⃣ LEFT JOIN<br/>reservations]
-    C --> D[4️⃣ 예약 수 집계<br/>GROUP BY]
-    D --> E[5️⃣ 가용 객실<br/>필터링 HAVING]
-    E --> F[6️⃣ CTE 완성]
-    F --> G[7️⃣ FULLTEXT<br/>검색]
-    G --> H[8️⃣ JOIN CTE]
-    H --> I[9️⃣ 최저가 집계]
-    I --> J[🔟 페이징]
+    A[room_types 조회] --> B[인원 필터링]
+    B --> C[LEFT JOIN<br/>reservations]
+    C --> D[예약 수 집계<br/>GROUP BY]
+    D --> E[가용 객실<br/>필터링 HAVING]
+    E --> F[CTE 완성]
+    F --> G[FULLTEXT<br/>검색]
+    G --> H[JOIN CTE]
+    H --> I[최저가 집계]
+    I --> J[페이징]
     
     style A fill:#e1f5ff
     style F fill:#fff4e1
