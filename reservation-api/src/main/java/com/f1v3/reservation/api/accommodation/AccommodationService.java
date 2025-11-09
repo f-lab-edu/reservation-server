@@ -1,10 +1,12 @@
 package com.f1v3.reservation.api.accommodation;
 
 import com.f1v3.reservation.api.accommodation.dto.SearchAccommodationResponse;
-import com.f1v3.reservation.common.domain.accommodation.repository.AccommodationRepository;
+import com.f1v3.reservation.common.domain.accommodation.repository.SearchAccommodationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -16,22 +18,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AccommodationService {
 
-    private final AccommodationRepository accommodationRepository;
+    private final SearchAccommodationRepository searchAccommodationRepository;
 
-    public List<SearchAccommodationResponse> search(String keyword) {
-        return accommodationRepository.findContainingNameOrRegion(keyword).stream()
+    public List<SearchAccommodationResponse> search(
+            String keyword,
+            LocalDate checkIn,
+            LocalDate checkOut,
+            int capacity,
+            Pageable pageable
+    ) {
+
+        return searchAccommodationRepository.search(keyword, checkIn, checkOut, capacity, pageable.getPageNumber(), pageable.getPageSize()).stream()
                 .map(SearchAccommodationResponse::from)
-                .toList();
-    }
-
-    public List<SearchAccommodationResponse> searchV2(String keyword) {
-        return accommodationRepository.fullTextSearchByKeyword(keyword).stream()
-                .map(accommodation -> new SearchAccommodationResponse(
-                        accommodation.getName(),
-                        accommodation.getDescription(),
-                        accommodation.getAddress(),
-                        accommodation.getContactNumber()
-                ))
                 .toList();
     }
 }
