@@ -59,7 +59,7 @@ public class Accommodation extends BaseEntity {
         this.contactNumber = contactNumber;
         this.thumbnail = thumbnail;
         this.status = AccommodationStatus.PENDING;
-        this.isVisible = false; // 기본값 false, 관리자 승인 후 true
+        this.isVisible = true; // fixme: 기본값 false, 관리자 승인 후 true, 현 단계에서는 true로 설정
     }
 
     public void approve() {
