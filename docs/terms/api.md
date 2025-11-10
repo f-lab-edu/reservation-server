@@ -1,174 +1,137 @@
-# 약관 (Terms)
+# 약관 API 명세
 
-## 1. 약관 리스트 조회 (사용자용)
+## 1. 엔드포인트 요약
+|분류|Method / Path|설명|
+|---|---|---|
+|사용자|`GET /v1/sign-up/terms`|가입 화면에 노출할 최신 약관 목록 조회|
+|관리자|`GET /v1/admin/terms`|약관 + 버전 전체 목록 (필터/정렬)| 
+|관리자|`POST /v1/admin/terms`|새 약관 코드 생성 및 최초 버전 등록|
+|관리자|`PUT /v1/admin/terms/{termCode}/versions`|기존 약관 코드에 새 버전 추가|
+|관리자|`PATCH /v1/admin/terms/{termCode}`|제목, 타입, 정렬, 상태 변경|
 
-```http request
+## 2. 사용자 약관 목록
+```http
 GET /v1/sign-up/terms
-
-REQUEST:
-N/A
-
-RESPONSE:
-{
-    "terms": [
-        {
-            "termId": 1,
-            "termCode": "TERM_OF_SERVICE",
-            "version": 1,
-            "title": "이용약관",
-            "type": "REQUIRED",
-            "content": "제 1조(목적) ... 제 2조(정의) ...",
-            "displayOrder": 1
-        },
-        {
-            "termId": 2,
-            "termCode": "TERM_OF_AGE",
-            "version": 1,
-            "title": "만 14세 이상 확인 (필수)",
-            "type": "REQUIRED",
-            "content": "XXX는 만 14세 미만 아동의 서비스 이용을 제한... 법정대리인 동의없이 회원가입을 하는 경우 제한... ",
-            "displayOrder": 2
-        },
-        {
-            "termId": 3,
-            "termCode": "TERM_OF_PERSONAL_INFORMATION",
-            "version": 2,
-            "title": "개인정보 수집 및 이용",
-            "type": "OPTIONAL",
-            "content": "XXX는 회원가입을 위해 아래와 같은 개인정보를 수집합니다... ",
-            "displayOrder": 3
-        }
-        // ...
-    ]
-}		
 ```
+```json
+{
+  "terms": [
+    {
+      "termId": 1,
+      "termCode": "TERM_OF_SERVICE",
+      "title": "이용약관 (필수)",
+      "type": "REQUIRED",
+      "version": 2,
+      "displayOrder": 1,
+      "content": "제1조 목적 ..."
+    },
+    {
+      "termId": 3,
+      "termCode": "TERM_OF_MARKETING",
+      "title": "마케팅 수신 동의 (선택)",
+      "type": "OPTIONAL",
+      "version": 1,
+      "displayOrder": 3,
+      "content": "서비스 소식, 프로모션 ..."
+    }
+  ]
+}
+```
+- 내부 조건: `status = ACTIVE`, `is_current = true`, `effective_date <= now`, `expiry_date IS NULL OR expiry_date > now`.
+- `title` 뒤 `(필수)` `(선택)` 문구는 API에서 직접 붙여 UI 처리 부담을 줄인다.
 
-- content 필드는 상세 약관 내용을 포함한다.
-- type 필드가 `REQUIRED` 인 경우 title에 `(필수)` 문구가 붙는다.
-- version 필드는 약관의 버전을 나타낸다.
-    - 사용자 가입 시점에는 가장 최신 버전 or 활성화된 약관들만 제공하면 된다.
-
-## 2. 약관 리스트 조회 (관리자용)
-
-```http request
-GET /v1/admin/terms
-
-REQUEST:
-N/A
-
-RESPONSE:
+## 3. 관리자 약관 목록
+```http
+GET /v1/admin/terms?code=TERM_OF_SERVICE&includeHistory=true
+Authorization: Bearer {admin_access_token}
+```
+```json
 [
   {
-    "termId": 2,
-    "termCode": "TERM_PRIVACY",
-    "title": "개인정보 처리방침",
+    "termId": 1,
+    "termCode": "TERM_OF_SERVICE",
+    "title": "서비스 이용 약관",
     "type": "REQUIRED",
-    "displayOrder": 101,
+    "displayOrder": 100,
     "status": "ACTIVE",
-    "createdAt": "2025-09-25T05:32:21",
-    "updatedAt": "2025-09-25T05:32:21",
-    "termVersionId": 5,
     "version": 3,
     "isCurrent": true,
-    "content": "개인정보 처리방침에 따라.. (최신 버전)",
-    "effectiveDateTime": "2025-09-25T05:32:22",
+    "content": "...",
+    "effectiveDateTime": "2025-09-25T00:00:00",
     "expiryDateTime": null,
-    "termVersionCreatedAt": "2025-09-25T05:32:22",
-    "termVersionUpdatedAt": "2025-09-25T05:32:22"
+    "createdAt": "2025-09-20T06:00:00",
+    "updatedAt": "2025-09-25T06:00:00"
   },
   {
     "termId": 1,
-    "termCode": "TERM_SERVICE",
+    "termCode": "TERM_OF_SERVICE",
     "title": "서비스 이용 약관",
     "type": "REQUIRED",
     "displayOrder": 100,
     "status": "ACTIVE",
-    "createdAt": "2025-09-25T05:32:21",
-    "updatedAt": "2025-09-25T05:32:21",
-    "termVersionId": 2,
     "version": 2,
-    "isCurrent": true,
-    "content": "본 서비스 이용 동의.. (최신 버전)",
-    "effectiveDateTime": "2025-09-25T05:32:22",
-    "expiryDateTime": null,
-    "termVersionCreatedAt": "2025-09-25T05:32:22",
-    "termVersionUpdatedAt": "2025-09-25T05:32:22"
-  },
-  {
-    "termId": 1,
-    "termCode": "TERM_SERVICE",
-    "title": "서비스 이용 약관",
-    "type": "REQUIRED",
-    "displayOrder": 100,
-    "status": "ACTIVE",
-    "createdAt": "2025-09-25T05:32:21",
-    "updatedAt": "2025-09-25T05:32:21",
-    "termVersionId": 1,
-    "version": 1,
     "isCurrent": false,
-    "content": "본 서비스 이용 동의..",
-    "effectiveDateTime": "2025-09-25T05:32:22",
-    "expiryDateTime": null,
-    "termVersionCreatedAt": "2025-09-25T05:32:22",
-    "termVersionUpdatedAt": "2025-09-25T05:32:22"
+    "content": "...",
+    "effectiveDateTime": "2024-01-01T00:00:00",
+    "expiryDateTime": "2025-09-25T00:00:00"
   }
 ]
 ```
+- `includeHistory=false`(기본) 이면 최신 버전만 반환.
 
-## 3. 약관 생성 API (관리자용)
-
-```http request
+## 4. 약관 생성
+```http
 POST /v1/admin/terms
+Content-Type: application/json
 
-REQUEST:
 {
-    "termCode": "TERM_OF_MARKETING",
-    "title": "마케팅 수신 동의",
-    "type": "REQUIRED" | "OPTIONAL",
-    "displayOrder": 4,
-    "status": "ACTIVE" | "INACTIVE",
-    "version": 1,
-    "content": "새로운 약관 내용...",
-    "effectiveDate": "2025-09-20T00:00:00",
-    "expiryDate": null
-}
-
-RESPONSE:
-{
-    "termId": 4,
-    "termVersionId": 8
+  "termCode": "TERM_OF_MARKETING",
+  "title": "마케팅 수신 동의",
+  "type": "OPTIONAL",
+  "displayOrder": 4,
+  "status": "ACTIVE",
+  "version": 1,
+  "content": "새로운 약관 내용...",
+  "effectiveDate": "2025-09-20T00:00:00",
+  "expiryDate": null
 }
 ```
+```json
+{
+  "termId": 4,
+  "termVersionId": 8
+}
+```
+- 서버는 동일 `termCode` 존재 여부를 검증하고, 최초 버전은 자동으로 `is_current = true`로 설정한다.
 
-## 4. 약관 버전 추가 API (관리자용)
-
-```http request
+## 5. 버전 추가
+```http
 PUT /v1/admin/terms/{termCode}/versions
 
-REQUEST:
 {
-    "currentVersion": 1,    // 현재 활성화된 버전 (기존 버전)
-    "content": "수정된 약관 내용...",
-    "effectiveDate": "2025-10-01T00:00:00"
-}
-
-RESPONSE:
-[성공]
-{
-    "success": true,
-    "error": null
-    "result": {
-        "termVersionId": 9,
-        "version": 2
-    }
-}
-
-[실패 (충돌)]
-{
-    "success": false,
-    "error": {
-        "code": "VERSION_CONFLICT",
-        "message": "현재 활성화된 버전과 일치하지 않습니다."
-    }
+  "baseVersion": 2,
+  "content": "개정된 본문...",
+  "effectiveDate": "2025-10-01T00:00:00",
+  "expiryDate": null
 }
 ```
+성공 시
+```json
+{
+  "version": 3,
+  "termVersionId": 12
+}
+```
+- `baseVersion`은 현재 활성 버전과 일치해야 하며, 불일치 시 `409 VERSION_CONFLICT`를 반환해 동시 수정 문제를 방지한다.
+
+## 6. 메타데이터 수정
+```http
+PATCH /v1/admin/terms/{termCode}
+
+{
+  "title": "서비스 이용 약관(개정)",
+  "displayOrder": 90,
+  "status": "ACTIVE"
+}
+```
+- 약관 코드를 변경할 수는 없으며, 제목/정렬/타입/상태만 수정 가능하다.

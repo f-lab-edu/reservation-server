@@ -1,10 +1,10 @@
-# MySQL 검색 성능 최적화: LIKE에서 FULLTEXT INDEX로 개선
+# MySQL 검색 성능 최적화: LIKE → FULLTEXT INDEX
 
-## 개요
-
-숙소 검색 시스템에서 LIKE 연산을 FULLTEXT INDEX로 전환하여 **검색 속도를 1초 이상에서 0.01초 수준으로 개선**하는 과정을 다룹니다.
-
-특히, LIKE 연산, Stop-word Parser, Ngram Parser의 동작 원리와 실제 성능 테스트 결과를 비교하며, 각 방식의 장단점과 적용 사례를 정리합니다.
+## 요약
+- 기존 `LIKE '%키워드%'` 검색은 선행 와일드카드로 인해 전수 스캔이 발생해 1초 이상 지연되었다.
+- MySQL 8.4 Ngram FULLTEXT 인덱스를 도입해 평균 0.01초 수준으로 응답 시간을 단축했다.
+- Stop-word Parser와 Ngram Parser의 적용 조건, 인덱스 크기, 성능을 비교해 한국어 환경에서는 Ngram이 적합하다는 결론을 얻었다.
+- 성능 측정을 위해 EXPLAIN ANALYZE로 4가지 시나리오를 테스트하고, LIMIT/정렬 전략까지 점검했다.
 
 ## 1. 문제 인식: LIKE 연산의 한계
 

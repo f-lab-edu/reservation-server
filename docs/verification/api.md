@@ -1,60 +1,59 @@
-# 핸드폰 인증 (Phone Verification)
+# 휴대폰 인증 API
 
-## 1. 인증번호 발송 API
+## 1. 엔드포인트 요약
+|Method / Path|설명|
+|---|---|
+|`POST /v1/verification/phone/request`|인증번호 발송 요청|
+|`POST /v1/verification/phone/confirm`|인증번호 확인, 토큰 발급|
 
-> 랜덤한 숫자 생성 후 로그 출력하는 방식으로 구현한다.
+## 2. 인증번호 발송
+```http
+POST /v1/verification/phone/request
+Content-Type: application/json
 
-```http request
-POST /v1/sign-up/phone/verification/send-code
-
-REQUEST:
 {
-    "phoneNumber": "010-0000-0000",
+  "phoneNumber": "01012345678"
 }
-
-RESPONSE:
+```
+```json
 {
-   "expiredAt": "2025-09-20T12:34:56" // 인증번호 만료 시간
+  "expiredAt": "2025-09-20T12:34:56Z",
+  "cooldownSeconds": 60
+}
+```
+- 동일 번호는 60초 쿨다운, 하루 5회 이상 요청 시 429 응답.
+- 내부적으로 난수(5자리) 생성 후 Redis/DB에 `expiredAt = now + 3m`으로 저장하고, 실제 SMS 연동 전까지 서버 로그에만 출력한다.
+
+## 3. 인증번호 검증
+```http
+POST /v1/verification/phone/confirm
+
+{
+  "phoneNumber": "01012345678",
+  "verificationCode": "12345"
+}
+```
+성공 시:
+```json
+{
+  "token": "verif_f757d5d5-1ac0-4af1-9376-3f458b1ff302",
+  "expiresIn": 600
+}
+```
+실패 시:
+```json
+{
+  "error": {
+    "code": "INVALID_CODE" | "EXPIRED_CODE" | "MAX_ATTEMPTS" | "PHONE_ALREADY_REGISTERED",
+    "message": "인증번호가 일치하지 않습니다."
+  }
 }
 ```
 
-- 3분 이내 동일한 휴대폰 번호로 재요청 불가
-- 내부적으로 생성된 인증번호는 3분간 유효
-
-## 2. 인증번호 확인 API
-
-```http request
-POST /v1/sign-up/phone/verification/verify-code
-
-REQUEST:
-{
-    "phoneNumber": "010-0000-0000",
-    "verificationCode": "1234"
-}
-
-RESPONSE:
-
-[성공 케이스]
-{
-    "success": true,
-    "error": null
-}
-
-[실패 케이스]
-{
-    "success": false,
-    "error": {
-        "code": "INVALID_CODE" | "EXPIRED_CODE" | "MAX_ATTEMPTS_EXCEEDED" | "PHONE_ALREADY_REGISTERED",
-        "message": "인증에 실패한 사유 메시지"
-    }
-}
-```
-
-**검증 절차**
-
-1. DB에서 전화번호와 인증 코드를 읽은 후 인증 코드가 일치하는지 확인
-    - 만약 3회 이상 틀렸을 경우 "MAX_ATTEMPTS_EXCEEDED" 예외 발생, 사용불가 처리
-2. 인증 코드 생성 시점이 3분 이내인지 확인
-3. 이미 가입된 회원인지 확인
-4. 모든 검증이 통과하면 인증 성공 처리
-
+## 4. 서버 검증 로직
+1. `phoneNumber`로 최신 인증 레코드를 조회한다.
+2. 만료 여부(`expired_at < now`) 확인 후 `EXPIRED_CODE` 응답.
+3. `attempt_count`가 3 이상이면 `MAX_ATTEMPTS`.
+4. 이미 가입된 사용자인지 확인하고, 존재 시 `PHONE_ALREADY_REGISTERED`.
+5. 코드가 일치하면 `is_verified = true`, `verified_at = now`로 업데이트하고 성공 토큰 발급.
+6. 성공 토큰은 가입 시 동일 번호인지 검증하는 데 사용하며, 10분 후 만료된다.
