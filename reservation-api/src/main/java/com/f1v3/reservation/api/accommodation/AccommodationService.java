@@ -1,10 +1,15 @@
 package com.f1v3.reservation.api.accommodation;
 
 import com.f1v3.reservation.api.accommodation.dto.SearchAccommodationResponse;
-import com.f1v3.reservation.common.domain.accommodation.repository.SearchAccommodationRepository;
+import com.f1v3.reservation.common.api.response.PageInfo;
+import com.f1v3.reservation.common.api.response.PagedResponse;
+import com.f1v3.reservation.common.domain.accommodation.dto.SearchAccommodationDto;
+import com.f1v3.reservation.common.domain.accommodation.repository.AccommodationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -18,18 +23,32 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AccommodationService {
 
-    private final SearchAccommodationRepository searchAccommodationRepository;
+    private final AccommodationRepository accommodationRepository;
 
-    public List<SearchAccommodationResponse> search(
+    public PagedResponse<SearchAccommodationResponse> searchPaged(
             String keyword,
             LocalDate checkIn,
             LocalDate checkOut,
             int capacity,
             Pageable pageable
     ) {
+        if (StringUtils.hasText(keyword)) {
+            Page<SearchAccommodationDto> response = accommodationRepository.searchFullText(
+                    keyword.trim(),
+                    checkIn,
+                    checkOut,
+                    capacity,
+                    pageable
+            );
 
-        return searchAccommodationRepository.search(keyword, checkIn, checkOut, capacity, pageable.getPageNumber(), pageable.getPageSize()).stream()
-                .map(SearchAccommodationResponse::from)
-                .toList();
+            List<SearchAccommodationResponse> content = response.getContent().stream()
+                    .map(SearchAccommodationResponse::from)
+                    .toList();
+
+            return PagedResponse.of(content, PageInfo.of(pageable, response.getTotalElements()));
+        }
+
+        return accommodationRepository.search(checkIn, checkOut, capacity, pageable)
+                .map(SearchAccommodationResponse::from);
     }
 }
