@@ -1,77 +1,78 @@
-# 숙소 (Accommodation)
+# 숙소 API 명세
 
-## 1. 호텔 등록 (공급자용)
+## 1. 엔드포인트 요약
+|분류|Method / Path|설명|권한|
+|---|---|---|---|
+|공급자|`POST /v1/hotels`|숙소 등록|`SUPPLIER`|
+|공급자|`GET /v1/hotels`|자신이 등록한 숙소 목록 조회|`SUPPLIER`|
+|공급자|`GET /v1/hotels/{id}`|숙소 상세 조회|`SUPPLIER` (소유자)|
+|사용자|`GET /v1/public/hotels`|검색/목록 조회 (페이징)|익명/`USER`|
+|사용자|`GET /v1/public/hotels/{id}`|승인 숙소 상세|익명/`USER`|
 
-```http request
+## 2. 숙소 등록 (공급자)
+```http
 POST /v1/hotels
-Authorization: Bearer {supplier_access_token} # 해당 값을 기반으로 supplierId 추출
+Authorization: Bearer {supplier_access_token}
+Content-Type: application/json
 
-REQUEST:
 {
-    "name": "세인트존스 호텔",
-    "description": "강문해변 앞에 자리 잡아 객실에서 드넓고 아름다운 바다를 감상할 수 있습니다.\n아름다운 대자연과 어우러지는 특별하고도 환상적인 경험을 느낄 수 있습니다."
-    "address": "강원특별자치도 강릉시 강문동 1-1",
-    "contact_number": "033-660-9593",
-    
-    "is_visible": true # 필요한가? PENDING -> APPROVED 되는 시점에 true로 바뀌는게 맞지 않나?
+  "name": "세인트존스 호텔",
+  "description": "강문해변 앞에 자리 잡은 시그니처 오션뷰 리조트",
+  "address": "강원특별자치도 강릉시 강문동 1-1",
+  "contactNumber": "033-660-9593",
+  "isVisible": true
 }
 ```
+- 응답: `201 Created` + `{ "id": 1, "status": "PENDING" }`
+- `supplierId`는 Access Token에서 추출하며 서버가 강제로 매핑한다.
 
-## 2. 호텔 조회 (공급자용)
-
-> 자신이 등록한 호텔 조회 (N개의 호텔이 있을 수 있음)
-
-```http request
-GET /v1/hotels
-Authorization: Bearer {suuplier_access_token}
-
-REQUEST:
-N/A
-
-RESPONSE:
-[
-    {
-        "id": 1,
-        "name": "세인트존스 호텔",
-        "description": "강문해변 앞에 자리 잡아 객실에서 드넓고 아름다운 바다를 감상할 수 있습니다.",
-        "address": "강원특별자치도 강릉시 강문동 1-1",
-        "contact_number": "033-660-9593",
-        "status": "APPROVED",
-        "is_visible": true,
-        "created_at": "2025-10-15T22:00:00Z",
-        "updated_at": "2025-10-15T22:00:00Z"
-    },
-...
-]
-
+## 3. 공급자 숙소 목록
+```http
+GET /v1/hotels?page=0&size=20
+Authorization: Bearer {supplier_access_token}
 ```
-
-## 3. 호텔 검색 (사용자용)
-
-> 추후에 페이징 처리 진행 
-
-```http request
-GET /v1/hotels?query=호텔
-
-REQUEST:
-N/A
-
-RESPONSE:
-[
+```json
+{
+  "content": [
     {
-        "id": 1,
-        "name": "세인트존스 호텔",
-        "description": "강문해변 앞에 자리 잡아 객실에서 드넓고 아름다운 바다를 감상할 수 있습니다.",
-        "address": "강원특별자치도 강릉시 강문동 1-1",
-        "contact_number": "033-123-4567",
-    },
-    {
-        "id": 2,
-        "name": "여수 라마다 프라자 호텔",
-        "description": "특 1급 프리미엄 호텔에서 여수의 아름다운 바다를 한눈에 볼 수 있는 인피니티 풀과, 국내 최고 높이의 짚트랙을 동시에 즐기세요",
-        "address": "전남 여수시 돌산읍 우두리 1048-4",
-        "contact_number": "061-123-1234",
+      "id": 1,
+      "name": "세인트존스 호텔",
+      "status": "APPROVED",
+      "isVisible": true,
+      "createdAt": "2025-10-15T22:00:00Z",
+      "updatedAt": "2025-10-20T05:10:00Z"
     }
-]
-
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 3
+}
 ```
+- 공급자 자신이 소유한 숙소만 반환하며, 소유권 검증 실패 시 403을 리턴한다.
+
+## 4. 사용자 검색/조회
+```http
+GET /v1/public/hotels?query=호텔&sort=rating,DESC&page=0&size=10
+```
+```json
+{
+  "content": [
+    {
+      "id": 1,
+      "name": "세인트존스 호텔",
+      "description": "오션뷰 객실",
+      "address": "강원특별자치도 강릉시 강문동 1-1",
+      "contactNumber": "033-123-4567"
+    }
+  ],
+  "totalElements": 124
+}
+```
+- 내부적으로 `status = APPROVED AND is_visible = true` 조건을 강제한다.
+- 추후 위경도 기반 필터와 가격 필터를 query 파라미터로 확장한다.
+
+### 상세 조회
+```http
+GET /v1/public/hotels/{id}
+```
+`404`는 존재하지 않거나 아직 승인되지 않은 숙소에 대한 접근을 의미한다.
