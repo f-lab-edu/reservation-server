@@ -25,7 +25,7 @@ public class AccommodationService {
 
     private final AccommodationRepository accommodationRepository;
 
-    public PagedResponse<SearchAccommodationResponse> searchPaged(
+    public PagedResponse<SearchAccommodationResponse> search(
             String keyword,
             LocalDate checkIn,
             LocalDate checkOut,

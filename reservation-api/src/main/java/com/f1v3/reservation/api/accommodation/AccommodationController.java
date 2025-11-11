@@ -42,7 +42,7 @@ public class AccommodationController {
             @PageableDefault(page = 0, size = 20) Pageable pageable
     ) {
         PagedResponse<SearchAccommodationResponse> response =
-                accommodationService.searchPaged(keyword, checkIn, checkOut, capacity, pageable);
+                accommodationService.search(keyword, checkIn, checkOut, capacity, pageable);
         return ApiResponse.success(response);
     }
 }
