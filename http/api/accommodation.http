@@ -1,7 +1,23 @@
-### 숙소 검색 (LIKE 검색)
-GET http://localhost:8080/v1/accommodations?keyword=하얏트 서울
+### 숙소 검색 FULLTEXT (keyword, checkIn, checkOut, capacity + page/size)
+@keyword = 강릉
+@checkIn = 2025-11-07
+@checkOut = 2025-11-09
+@capacity = 2
+
+GET http://localhost:8080/v1/accommodations/search
+    ?keyword={{keyword}}&
+    checkIn={{checkIn}}&
+    checkOut={{checkOut}}&
+    capacity={{capacity}}&
+    page=0&
+    size=10
 Content-Type: application/json
 
-### 숙소 검색 (전문 검색)
-GET http://localhost:8080/v1/accommodations/v2?keyword=하얏트 서울
+### 숙소 검색 (checkIn, checkOut, capacity + page/size)
+GET http://localhost:8080/v1/accommodations/search
+    ?checkIn={{checkIn}}&
+    checkOut={{checkOut}}&
+    capacity={{capacity}}&
+    page=0&
+    size=10
 Content-Type: application/json
