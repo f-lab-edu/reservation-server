@@ -58,6 +58,7 @@ public enum ErrorCode {
      */
     ACCOMMODATION_NOT_FOUND(ErrorStatus.NOT_FOUND, 6001, "숙소를 찾을 수 없습니다."),
     ACCOMMODATION_ACCESS_DENIED(ErrorStatus.FORBIDDEN, 6002, "숙소 소유자만 수정/삭제할 수 있습니다."),
+    ACCOMMODATION_VISIBILITY_DISABLED(ErrorStatus.BAD_REQUEST, 6003, "해당 숙소는 현재 공개 상태가 아닙니다."),
 
     /*
     객실 타입(Room Type) [code: 7xxx]
