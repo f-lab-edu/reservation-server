@@ -18,7 +18,6 @@ public record TermResponse(
         Integer version,
         String title,
         String content,
-        Integer displayOrder,
         Boolean isRequired,
         LocalDateTime activatedAt,
         LocalDateTime deactivatedAt,
@@ -32,7 +31,6 @@ public record TermResponse(
                 .version(termDto.version())
                 .title(termDto.title())
                 .content(termDto.content())
-                .displayOrder(termDto.displayOrder())
                 .isRequired(termDto.isRequired())
                 .activatedAt(termDto.activatedAt())
                 .deactivatedAt(termDto.deactivatedAt())

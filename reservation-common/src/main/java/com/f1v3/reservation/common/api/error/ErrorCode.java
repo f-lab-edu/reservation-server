@@ -22,8 +22,6 @@ public enum ErrorCode {
     TERM_CODE_INVALID(ErrorStatus.BAD_REQUEST, 2002, "올바르지 않은 약관 코드입니다."),
     TERM_REQUIRED_NOT_AGREED(ErrorStatus.BAD_REQUEST, 2003, "필수 약관에 동의하지 않았습니다."),
     TERM_VERSION_CONSTRAINT_VIOLATION(ErrorStatus.CONFLICT, 2004, "약관 생성 시 버전 충돌이 발생했습니다. 버전을 확인해주세요."),
-    TERM_REQUIRED_DISPLAY_ORDER_INVALID(ErrorStatus.BAD_REQUEST, 2005, "필수 약관의 표시 순서는 0 ~ 500 사이의 값이어야 합니다."),
-    TERM_OPTIONAL_DISPLAY_ORDER_INVALID(ErrorStatus.BAD_REQUEST, 2006, "선택 약관의 표시 순서는 501 ~ 1000 사이의 값이어야 합니다."),
 
     /*
     핸드폰 인증(PhoneVerification) [code: 3xxx]
@@ -58,7 +56,6 @@ public enum ErrorCode {
      */
     ACCOMMODATION_NOT_FOUND(ErrorStatus.NOT_FOUND, 6001, "숙소를 찾을 수 없습니다."),
     ACCOMMODATION_ACCESS_DENIED(ErrorStatus.FORBIDDEN, 6002, "숙소 소유자만 수정/삭제할 수 있습니다."),
-    ACCOMMODATION_VISIBILITY_DISABLED(ErrorStatus.BAD_REQUEST, 6003, "해당 숙소는 현재 공개 상태가 아닙니다."),
 
     /*
     객실 타입(Room Type) [code: 7xxx]

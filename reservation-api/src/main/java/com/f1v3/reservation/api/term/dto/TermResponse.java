@@ -16,8 +16,7 @@ public record TermResponse(
         Integer version,
         String title,
         String content,
-        Boolean isRequired,
-        Integer displayOrder
+        Boolean isRequired
 ) {
     public static TermResponse from(ActiveTermDto term) {
         return TermResponse.builder()
@@ -26,7 +25,6 @@ public record TermResponse(
                 .title(term.title())
                 .content(term.content())
                 .isRequired(term.isRequired())
-                .displayOrder(term.displayOrder())
                 .build();
     }
 }

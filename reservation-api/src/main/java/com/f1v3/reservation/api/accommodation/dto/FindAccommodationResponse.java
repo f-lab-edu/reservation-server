@@ -1,13 +1,9 @@
 package com.f1v3.reservation.api.accommodation.dto;
 
-import com.f1v3.reservation.api.reservation.dto.AvailabilityRoomResponse;
-import com.f1v3.reservation.common.domain.accommodation.dto.FindAccommodationDto;
-import com.f1v3.reservation.common.domain.accommodation.dto.FindAccommodationRoomDto;
+import com.f1v3.reservation.common.domain.accommodation.Accommodation;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 숙소 상세 조회 응답 DTO
@@ -24,48 +20,32 @@ public record FindAccommodationResponse(
 ) {
 
     public static FindAccommodationResponse from(
-            FindAccommodationDto dto,
-            List<AvailabilityRoomResponse> reservedRooms
+            Accommodation accommodation,
+            List<RoomTypeAvailabilityDto> rooms
     ) {
 
-        Map<Long/* 객실 타입 ID */, Long/* 예약 건수 */> reservedCountMap = reservedRooms.stream()
-                .collect(Collectors.toMap(
-                        AvailabilityRoomResponse::roomTypeId,
-                        AvailabilityRoomResponse::reservedCount
-                ));
-
-        List<RoomTypeDetail> rooms = dto.rooms().stream()
-                .map(room -> toRoomTypeDetail(room, reservedCountMap))
+        List<RoomTypeDetail> roomDetails = rooms.stream()
+                .map(room -> new RoomTypeDetail(
+                        room.roomTypeId(),
+                        room.roomTypeName(),
+                        room.roomTypeDescription(),
+                        room.standardCapacity(),
+                        room.maxCapacity(),
+                        room.basePrice(),
+                        room.roomTypeThumbnail(),
+                        room.totalRoomCount(),
+                        room.availableCount(),
+                        room.isAvailable()
+                ))
                 .toList();
 
         return new FindAccommodationResponse(
-                dto.accommodationId(),
-                dto.accommodationName(),
-                dto.accommodationAddress(),
-                dto.accommodationDescription(),
-                dto.accommodationThumbnail(),
-                rooms
-        );
-    }
-
-    private static RoomTypeDetail toRoomTypeDetail(
-            FindAccommodationRoomDto room,
-            Map<Long, Long> reservedCountMap
-    ) {
-        long reservedCount = reservedCountMap.getOrDefault(room.roomTypeId(), 0L);
-        int availableRoomCount = (int) (room.totalRoomCount() - reservedCount);
-
-        return new RoomTypeDetail(
-                room.roomTypeId(),
-                room.roomTypeName(),
-                room.roomTypeDescription(),
-                room.standardCapacity(),
-                room.maxCapacity(),
-                room.basePrice(),
-                room.roomTypeThumbnail(),
-                room.totalRoomCount(),
-                availableRoomCount,
-                availableRoomCount > 0
+                accommodation.getId(),
+                accommodation.getName(),
+                accommodation.getAddress(),
+                accommodation.getDescription(),
+                accommodation.getThumbnail(),
+                roomDetails
         );
     }
 
@@ -79,7 +59,7 @@ public record FindAccommodationResponse(
             String thumbnail,
             int totalRoomCount,
             int availableRoomCount,
-            boolean available
+            boolean isAvailable
 
     ) {
     }

@@ -14,7 +14,6 @@ public record AdminTermDto(
         Integer version,
         String title,
         String content,
-        Integer displayOrder,
         Boolean isRequired,
         LocalDateTime activatedAt,
         LocalDateTime deactivatedAt,

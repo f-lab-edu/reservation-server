@@ -12,7 +12,6 @@ public record ActiveTermDto(
         Integer version,
         String title,
         String content,
-        Boolean isRequired,
-        Integer displayOrder
+        Boolean isRequired
 ) {
 }
