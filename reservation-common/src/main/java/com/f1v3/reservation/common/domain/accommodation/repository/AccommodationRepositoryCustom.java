@@ -1,7 +1,6 @@
 package com.f1v3.reservation.common.domain.accommodation.repository;
 
 import com.f1v3.reservation.common.api.response.PagedResponse;
-import com.f1v3.reservation.common.domain.accommodation.dto.FindAccommodationDto;
 import com.f1v3.reservation.common.domain.accommodation.dto.SearchAccommodationDto;
 import org.springframework.data.domain.Pageable;
 
@@ -20,8 +19,4 @@ public interface AccommodationRepositoryCustom {
             int capacity,
             Pageable pageable
     );
-
-    FindAccommodationDto findAccommodationWithRooms(Long accommodationId);
-
-    boolean isAccommodationVisible(Long accommodationId);
 }

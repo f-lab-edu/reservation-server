@@ -3,8 +3,6 @@ package com.f1v3.reservation.common.domain.accommodation.repository;
 import com.f1v3.reservation.common.api.response.PageInfo;
 import com.f1v3.reservation.common.api.response.PagedResponse;
 import com.f1v3.reservation.common.domain.accommodation.QAccommodation;
-import com.f1v3.reservation.common.domain.accommodation.dto.FindAccommodationDto;
-import com.f1v3.reservation.common.domain.accommodation.dto.FindAccommodationRoomDto;
 import com.f1v3.reservation.common.domain.accommodation.dto.SearchAccommodationDto;
 import com.f1v3.reservation.common.domain.reservation.QReservation;
 import com.f1v3.reservation.common.domain.room.QRoomType;
@@ -21,9 +19,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
-
-import static com.querydsl.core.group.GroupBy.groupBy;
-import static com.querydsl.core.group.GroupBy.list;
 
 /**
  * 숙소 Querydsl Repository 구현체
@@ -115,51 +110,5 @@ public class AccommodationRepositoryImpl implements AccommodationRepositoryCusto
 
         PageInfo pageInfo = PageInfo.of(pageable, totalElements);
         return PagedResponse.of(content, pageInfo);
-    }
-
-    @Override
-    public FindAccommodationDto findAccommodationWithRooms(Long accommodationId) {
-
-        return queryFactory
-                .from(accommodation)
-                .leftJoin(roomType).on(roomType.accommodation.eq(accommodation))
-                .where(accommodation.isVisible.isTrue()
-                        .and(accommodation.id.eq(accommodationId)))
-                .transform(
-                        groupBy(accommodation.id).as(
-                                Projections.constructor(
-                                        FindAccommodationDto.class,
-                                        accommodation.id,
-                                        accommodation.name,
-                                        accommodation.address,
-                                        accommodation.description,
-                                        accommodation.thumbnail,
-                                        list(
-                                                Projections.constructor(
-                                                        FindAccommodationRoomDto.class,
-                                                        roomType.id,
-                                                        roomType.name,
-                                                        roomType.description,
-                                                        roomType.standardCapacity,
-                                                        roomType.maxCapacity,
-                                                        roomType.basePrice,
-                                                        roomType.thumbnail,
-                                                        roomType.totalRoomCount
-                                                )
-                                        )
-                                )
-                        )
-                ).get(accommodationId);
-    }
-
-    @Override
-    public boolean isAccommodationVisible(Long accommodationId) {
-
-        return !queryFactory.selectOne()
-                .from(accommodation)
-                .where(accommodation.id.eq(accommodationId)
-                        .and(accommodation.isVisible.isTrue()))
-                .fetch()
-                .isEmpty();
     }
 }
