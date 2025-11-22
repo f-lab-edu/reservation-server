@@ -1,5 +1,7 @@
 package com.f1v3.reservation.common.domain.accommodation.dto;
 
+import com.f1v3.reservation.common.domain.room.dto.RoomTypeSummaryDto;
+
 import java.util.List;
 
 /**
@@ -13,6 +15,6 @@ public record FindAccommodationDto(
         String accommodationAddress,
         String accommodationDescription,
         String accommodationThumbnail,
-        List<FindAccommodationRoomDto> rooms
+        List<RoomTypeSummaryDto> rooms
 ) {
 }
