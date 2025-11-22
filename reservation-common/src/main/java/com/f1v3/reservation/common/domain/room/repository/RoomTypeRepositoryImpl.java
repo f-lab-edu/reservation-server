@@ -3,6 +3,7 @@ package com.f1v3.reservation.common.domain.room.repository;
 import com.f1v3.reservation.common.domain.room.QRoomType;
 import com.f1v3.reservation.common.domain.room.QRoomUnit;
 import com.f1v3.reservation.common.domain.room.dto.RoomResponseDto;
+import com.f1v3.reservation.common.domain.room.dto.RoomTypeSummaryDto;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -48,5 +49,24 @@ public class RoomTypeRepositoryImpl implements RoomTypeRepositoryCustom {
                                 )
                         )
                 );
+    }
+
+    @Override
+    public List<RoomTypeSummaryDto> findAllByAccommodationId(Long accommodationId) {
+        return queryFactory
+                .select(Projections.constructor(
+                        RoomTypeSummaryDto.class,
+                        roomType.id,
+                        roomType.name,
+                        roomType.description,
+                        roomType.standardCapacity,
+                        roomType.maxCapacity,
+                        roomType.basePrice,
+                        roomType.thumbnail,
+                        roomType.totalRoomCount
+                ))
+                .from(roomType)
+                .where(roomType.accommodation.id.eq(accommodationId))
+                .fetch();
     }
 }
