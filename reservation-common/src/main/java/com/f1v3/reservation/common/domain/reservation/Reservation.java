@@ -38,9 +38,13 @@ public class Reservation extends BaseEntity {
     @Column(nullable = false)
     private LocalDate checkOut;
 
+    @Column(nullable = false)
+    private Long userId;
+
     // todo: 상태 값 (전환 가능한 상태 체크 필요) FSM -> if-else의 문제점 해결
     @Builder
-    private Reservation(Long roomTypeId, LocalDate checkIn, LocalDate checkOut) {
+    private Reservation(Long userId, Long roomTypeId, LocalDate checkIn, LocalDate checkOut) {
+        this.userId = userId;
         this.roomTypeId = roomTypeId;
         this.checkIn = checkIn;
         this.checkOut = checkOut;
