@@ -1,9 +1,9 @@
 package com.f1v3.reservation.api.reservation;
 
+import com.f1v3.reservation.api.reservation.dto.ConfirmReservationHoldResponse;
 import com.f1v3.reservation.api.reservation.dto.CreateReservationHoldRequest;
 import com.f1v3.reservation.api.reservation.dto.ReservationHoldResponse;
 import com.f1v3.reservation.api.room.RoomTypeStockService;
-import com.f1v3.reservation.common.api.error.ErrorCode;
 import com.f1v3.reservation.common.api.error.ReservationException;
 import com.f1v3.reservation.common.domain.room.RoomType;
 import com.f1v3.reservation.common.domain.room.repository.RoomTypeRepository;
@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+
+import static com.f1v3.reservation.common.api.error.ErrorCode.*;
 
 /**
  * 임시 예약 퍼사드 레이어
@@ -38,6 +40,7 @@ public class ReservationHoldFacade {
     private final RoomTypeStockService roomTypeStockService;
     private final RoomTypeRepository roomTypeRepository;
     private final RedissonClient redissonClient;
+    private final ReservationService reservationService;
 
     /**
      * 임시 예약 생성 요청
@@ -51,7 +54,7 @@ public class ReservationHoldFacade {
 
         // 1. 객실 타입 조회
         RoomType roomType = roomTypeRepository.findById(request.roomTypeId())
-                .orElseThrow(() -> new ReservationException(ErrorCode.ROOM_TYPE_NOT_FOUND, log::info));
+                .orElseThrow(() -> new ReservationException(ROOM_TYPE_NOT_FOUND, log::info));
 
         validateCapacity(roomType, request.capacity());
 
@@ -73,7 +76,7 @@ public class ReservationHoldFacade {
             locked = lock.tryLock(LOCK_WAIT_MILLIS, LOCK_LEASE_MILLIS, TimeUnit.MILLISECONDS);
 
             if (!locked) {
-                throw new ReservationException(ErrorCode.RESERVATION_LOCK_TIMEOUT, log::info,
+                throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::info,
                         Map.of("roomTypeId", request.roomTypeId(), "stayDays", stayDays));
             }
 
@@ -88,7 +91,7 @@ public class ReservationHoldFacade {
             );
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ReservationException(ErrorCode.RESERVATION_LOCK_TIMEOUT, log::warn,
+            throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::warn,
                     Map.of("roomTypeId", request.roomTypeId(), "stayDays", stayDays), e);
         } finally {
             if (locked) {
@@ -101,6 +104,17 @@ public class ReservationHoldFacade {
         }
     }
 
+    /**
+     * 임시 예약 확인 및 예약 확정 처리 (결제가 완료된 경우 호출하는 것을 전제)
+     * 1. Redis에서 임시 예약 정보 조회 및 검증 (존재 여부, 만료 여부)
+     * 2. 임시 예약에 해당하는 재고 확정 처리
+     *
+     */
+    public void confirmReservationHold(String holdKey, Long userId) {
+        ConfirmReservationHoldResponse response = reservationHoldService.confirmReservationHold(holdKey, userId);
+        reservationService.confirmReservation(userId, response);
+    }
+
     private String lockKey(Long roomTypeId, LocalDate date) {
         return String.format(LOCK_KEY_FORMAT, roomTypeId, date);
     }
@@ -108,7 +122,7 @@ public class ReservationHoldFacade {
     private void validateDate(LocalDate checkIn, LocalDate checkOut) {
         if (!checkIn.isBefore(checkOut)) {
             Map<String, Object> parameters = Map.of("checkIn", checkIn, "checkOut", checkOut);
-            throw new ReservationException(ErrorCode.INVALID_REQUEST_PARAMETER, log::info, parameters);
+            throw new ReservationException(INVALID_REQUEST_PARAMETER, log::info, parameters);
         }
     }
 
@@ -119,7 +133,7 @@ public class ReservationHoldFacade {
                     "maxCapacity", roomType.getMaxCapacity()
             );
 
-            throw new ReservationException(ErrorCode.ROOM_TYPE_CAPACITY_EXCEEDED, log::info, parameters);
+            throw new ReservationException(ROOM_TYPE_CAPACITY_EXCEEDED, log::info, parameters);
         }
     }
 
