@@ -50,17 +50,6 @@ public class Reservation extends BaseEntity {
         this.checkOut = checkOut;
     }
 
-    /**
-     * 주어진 날짜 범위와 예약 기간이 겹치는지 확인
-     *
-     * @param checkIn  체크인 날짜
-     * @param checkOut 체크아웃 날짜
-     * @return 겹치면 true, 아니면 false
-     */
-    public boolean isOverlapping(LocalDate checkIn, LocalDate checkOut) {
-        return this.checkIn.isBefore(checkOut) && checkIn.isBefore(this.checkOut);
-    }
-
     /*
     TODO: 실제 예약 기능 구현 시 확장 필요
             - 사용자 정보 연결 (userId)
