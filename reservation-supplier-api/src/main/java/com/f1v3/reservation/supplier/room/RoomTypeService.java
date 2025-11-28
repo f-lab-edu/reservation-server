@@ -125,7 +125,7 @@ public class RoomTypeService {
             throw new ReservationException(ErrorCode.ROOM_TYPE_NOT_FOUND, log::info);
         }
 
-        // Soft Delete 처리를 해야할까?
+        roomUnitRepository.deleteByRoomTypeId(roomTypeId);
         roomTypeRepository.deleteById(roomTypeId);
     }
 
