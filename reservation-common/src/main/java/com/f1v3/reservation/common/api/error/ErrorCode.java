@@ -72,6 +72,7 @@ public enum ErrorCode {
     RESERVATION_HOLD_ALREADY_PROCESSED(ErrorStatus.CONFLICT, 8003, "이미 처리된 임시 예약입니다."),
     RESERVATION_HOLD_FORBIDDEN(ErrorStatus.FORBIDDEN, 8004, "해당 임시 예약에 접근할 수 없습니다."),
     RESERVATION_LOCK_TIMEOUT(ErrorStatus.CONFLICT, 8005, "동일 일정 요청을 처리 중입니다. 잠시 후 다시 시도해주세요."),
+    RESERVATION_HOLD_EXPIRED(ErrorStatus.BAD_REQUEST, 8006, "임시 예약이 만료되었습니다."),
 
 
     /*
