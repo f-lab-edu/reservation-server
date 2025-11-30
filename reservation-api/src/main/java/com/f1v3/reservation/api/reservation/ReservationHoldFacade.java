@@ -6,6 +6,7 @@ import com.f1v3.reservation.api.reservation.dto.ReservationHoldResponse;
 import com.f1v3.reservation.api.room.RoomTypeStockService;
 import com.f1v3.reservation.common.api.error.ReservationException;
 import com.f1v3.reservation.common.domain.room.RoomType;
+import com.f1v3.reservation.common.domain.room.RoomTypeStock;
 import com.f1v3.reservation.common.domain.room.repository.RoomTypeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -76,12 +77,12 @@ public class ReservationHoldFacade {
             locked = lock.tryLock(LOCK_WAIT_MILLIS, LOCK_LEASE_MILLIS, TimeUnit.MILLISECONDS);
 
             if (!locked) {
-                throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::info,
-                        Map.of("roomTypeId", request.roomTypeId(), "stayDays", stayDays));
+                throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::info);
             }
 
-            // 5. 객실 재고 차감 수행
-            roomTypeStockService.decreaseForHold(roomType, request, stayDays);
+            // 5. 객실 재고 확보 및 검증(reservedCount 기준, holdCount는 별도 계산 예정)
+            List<RoomTypeStock> stocks = roomTypeStockService.ensureStocks(roomType, stayDays);
+            validateAvailability(request, stayDays, stocks);
 
             // 6. 임시 예약 생성 후 레디스에 저장
             return reservationHoldService.createHold(
@@ -134,6 +135,19 @@ public class ReservationHoldFacade {
             );
 
             throw new ReservationException(ROOM_TYPE_CAPACITY_EXCEEDED, log::info, parameters);
+        }
+    }
+
+    private void validateAvailability(CreateReservationHoldRequest request, List<LocalDate> stayDays, List<RoomTypeStock> stocks) {
+        boolean notEnough = stocks.stream().anyMatch(stock -> stock.availableQuantity() <= 0);
+        if (notEnough) {
+            Map<String, Object> parameters = Map.of(
+                    "roomTypeId", request.roomTypeId(),
+                    "checkIn", request.checkIn(),
+                    "checkOut", request.checkOut(),
+                    "stayDays", stayDays
+            );
+            throw new ReservationException(ROOM_TYPE_STOCK_NOT_ENOUGH, log::info, parameters);
         }
     }
 

@@ -16,12 +16,10 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 
 import static com.f1v3.reservation.common.api.error.ErrorCode.*;
 import static com.f1v3.reservation.common.redis.RedisKey.HOLD_HASH_FORMAT;
-import static com.f1v3.reservation.common.redis.RedisKey.HOLD_INDEX;
 import static com.f1v3.reservation.common.redis.RedisKey.HashField.*;
 
 /**
@@ -39,7 +37,7 @@ public class ReservationHoldService {
     private final RedisRepository redisRepository;
 
     /**
-     * 임시 예약 생성 + Redis Hash 저장 (TTL 미사용, 만료 배치 전제)
+     * 가계약 생성 후 Redis Hash 저장 (TTL 기반, 만료 배치 없이 처리)
      */
     public ReservationHoldResponse createHold(
             Long userId,
@@ -48,7 +46,6 @@ public class ReservationHoldService {
     ) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiredAt = now.plus(HOLD_EXPIRE_WINDOW);
-        double expiredAtMillis = expiredAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         String key = redisKey(roomType.getId(), request.checkIn(), request.checkOut(), userId);
 
         try {
@@ -65,7 +62,7 @@ public class ReservationHoldService {
                     operations.opsForHash().putIfAbsent(key, CREATED_AT, now.toString());
                     operations.opsForHash().put(key, UPDATED_AT, now.toString());
                     operations.opsForHash().put(key, EXPIRED_AT, expiredAt.toString());
-                    operations.opsForZSet().add(HOLD_INDEX, key, expiredAtMillis);
+                    operations.expire(key, HOLD_EXPIRE_WINDOW);
                     return operations.exec(); // tx commit
                 }
             });
@@ -114,9 +111,6 @@ public class ReservationHoldService {
                 operations.multi();
                 // 임시 예약 정보 삭제
                 operations.delete(holdKey);
-
-                // 인덱스(ZSet)에 저장된 만료 정보 삭제
-                operations.opsForZSet().remove(HOLD_INDEX, holdKey);
                 return operations.exec();
             }
         });
