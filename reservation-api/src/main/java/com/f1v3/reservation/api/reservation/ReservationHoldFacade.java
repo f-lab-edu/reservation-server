@@ -60,9 +60,7 @@ public class ReservationHoldFacade {
         validateCapacity(roomType, request.capacity());
 
         // 2. 숙박 기간 리스트 생성
-        List<LocalDate> stayDays = Stream.iterate(request.checkIn(), date -> date.plusDays(1))
-                .limit(ChronoUnit.DAYS.between(request.checkIn(), request.checkOut()))
-                .toList();
+        List<LocalDate> stayDays = getStayDays(request.checkIn(), request.checkOut());
 
         // 3. 객실 타입의 숙박 일자별로 락 획득 (Multi-Lock)
         RLock lock = redissonClient.getMultiLock(stayDays.stream()
@@ -108,12 +106,52 @@ public class ReservationHoldFacade {
     /**
      * 임시 예약 확인 및 예약 확정 처리 (결제가 완료된 경우 호출하는 것을 전제)
      * 1. Redis에서 임시 예약 정보 조회 및 검증 (존재 여부, 만료 여부)
-     * 2. 임시 예약에 해당하는 재고 확정 처리
+     * 2. 임시 예약에 해당하는 재고 확정 처리 및 예약 생성
      *
      */
     public void confirmReservationHold(String holdKey, Long userId) {
         ConfirmReservationHoldResponse response = reservationHoldService.confirmReservationHold(holdKey, userId);
-        reservationService.confirmReservation(userId, response);
+
+        RoomType roomType = roomTypeRepository.findById(response.roomTypeId())
+                .orElseThrow(() -> new ReservationException(ROOM_TYPE_NOT_FOUND, log::info));
+
+        List<LocalDate> stayDays = getStayDays(response.checkIn(), response.checkOut());
+
+        RLock lock = redissonClient.getMultiLock(stayDays.stream()
+                .sorted()
+                .map(date -> redissonClient.getLock(lockKey(roomType.getId(), date)))
+                .toArray(RLock[]::new));
+
+        boolean locked = false;
+        try {
+            locked = lock.tryLock(LOCK_WAIT_MILLIS, LOCK_LEASE_MILLIS, TimeUnit.MILLISECONDS);
+
+            if (!locked) {
+                throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::info,
+                        Map.of("roomTypeId", response.roomTypeId(), "stayDays", stayDays));
+            }
+
+            roomTypeStockService.reserve(roomType, stayDays, response.quantity());
+            reservationService.confirmReservation(userId, response);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::warn,
+                    Map.of("roomTypeId", response.roomTypeId(), "stayDays", stayDays), e);
+        } finally {
+            if (locked) {
+                try {
+                    lock.unlock();
+                } catch (Exception e) {
+                    log.warn("Failed to unlock reservation confirm lock. roomTypeId={}, stayDays={}", response.roomTypeId(), stayDays, e);
+                }
+            }
+        }
+    }
+
+    private List<LocalDate> getStayDays(LocalDate request, LocalDate request1) {
+        return Stream.iterate(request, date -> date.plusDays(1))
+                .limit(ChronoUnit.DAYS.between(request, request1))
+                .toList();
     }
 
     private String lockKey(Long roomTypeId, LocalDate date) {
@@ -139,7 +177,7 @@ public class ReservationHoldFacade {
     }
 
     private void validateAvailability(CreateReservationHoldRequest request, List<LocalDate> stayDays, List<RoomTypeStock> stocks) {
-        boolean notEnough = stocks.stream().anyMatch(stock -> stock.availableQuantity() <= 0);
+        boolean notEnough = stocks.stream().anyMatch(stock -> !stock.hasAvailable(1));
         if (notEnough) {
             Map<String, Object> parameters = Map.of(
                     "roomTypeId", request.roomTypeId(),
@@ -150,5 +188,4 @@ public class ReservationHoldFacade {
             throw new ReservationException(ROOM_TYPE_STOCK_NOT_ENOUGH, log::info, parameters);
         }
     }
-
 }

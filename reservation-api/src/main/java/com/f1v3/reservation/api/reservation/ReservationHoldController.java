@@ -35,4 +35,13 @@ public class ReservationHoldController {
     ) {
         reservationHoldFacade.confirmReservationHold(holdKey, user.id());
     }
+
+    @DeleteMapping("/{holdKey}")
+    public void cancelHold(
+            @PathVariable String holdKey,
+            @Login LoginUser user
+    ) {
+        // todo: 임시 예약 취소 API 구현 예정
+    }
+
 }

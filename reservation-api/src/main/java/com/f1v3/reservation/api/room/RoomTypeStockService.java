@@ -1,17 +1,21 @@
 package com.f1v3.reservation.api.room;
 
+import com.f1v3.reservation.common.api.error.ReservationException;
 import com.f1v3.reservation.common.domain.room.RoomType;
 import com.f1v3.reservation.common.domain.room.RoomTypeStock;
 import com.f1v3.reservation.common.domain.room.repository.RoomTypeStockRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
+import static com.f1v3.reservation.common.api.error.ErrorCode.ROOM_TYPE_STOCK_NOT_ENOUGH;
 
 /**
  * 객실 타입 재고 서비스
@@ -48,16 +52,30 @@ public class RoomTypeStockService {
                 .toList();
 
         if (!created.isEmpty()) {
-            try {
-                roomTypeStockRepository.saveAll(created);
-                roomTypeStockRepository.flush();
-                exist.addAll(created);
-            } catch (DataIntegrityViolationException e) {
-                log.warn("RoomTypeStock already exists for roomTypeId={} on dates={}", roomType.getId(), missing, e);
-                exist = roomTypeStockRepository.findAllByRoomTypeIdAndTargetDates(roomType.getId(), stayDays);
-            }
+
+            // fixme: 재시도 로직이 필요할까?
+            roomTypeStockRepository.saveAll(created);
+            roomTypeStockRepository.flush();
         }
 
         return exist;
+    }
+
+    /**
+     * 예약 확정 시 reservedCount를 증가시킨다.
+     */
+    @Transactional
+    public void reserve(RoomType roomType, List<LocalDate> stayDays, int quantity) {
+        List<RoomTypeStock> stocks = roomTypeStockRepository.findAllByRoomTypeIdAndTargetDates(roomType.getId(), stayDays);
+
+        if (stocks.stream().anyMatch(stock -> !stock.hasAvailable(quantity))) {
+            Map<String, Object> parameters = new HashMap<>();
+            parameters.put("roomTypeId", roomType.getId());
+            parameters.put("stayDays", stayDays);
+            throw new ReservationException(ROOM_TYPE_STOCK_NOT_ENOUGH, log::info, parameters);
+        }
+
+        stocks.forEach(stock -> stock.reserve(quantity));
+        roomTypeStockRepository.saveAll(stocks);
     }
 }
