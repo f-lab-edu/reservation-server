@@ -2,7 +2,6 @@ package com.f1v3.reservation.batch.reservation;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
@@ -15,7 +14,10 @@ public class ReservationHoldExpireScheduler {
 
     private final ReservationHoldExpireService reservationHoldExpireService;
 
-    @Scheduled(cron = "0 * * * * *")
+    /*
+     배치성 작업 제거를 위해 임시적으로 비활성화 처리
+     @Scheduled(cron = "0 * * * * *")
+     */
     public void restoreExpiredHolds() {
         reservationHoldExpireService.restoreExpiredHolds();
     }
