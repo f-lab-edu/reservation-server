@@ -25,31 +25,32 @@ public class RoomTypeStock extends BaseEntity {
     private Integer totalQuantity;
 
     @Column(nullable = false)
-    private Integer availableQuantity;
+    private Integer reservedCount;
 
     @Builder
-    private RoomTypeStock(RoomTypeStockPk roomTypeStockPk, Integer totalQuantity, Integer availableQuantity) {
+    private RoomTypeStock(RoomTypeStockPk roomTypeStockPk, Integer totalQuantity, Integer reservedCount) {
         this.roomTypeStockPk = roomTypeStockPk;
         this.totalQuantity = totalQuantity;
-        this.availableQuantity = availableQuantity;
+        this.reservedCount = reservedCount;
     }
 
-    public boolean hasAvailable() {
-        return availableQuantity > 0;
+    public int availableQuantity() {
+        return totalQuantity - reservedCount;
     }
 
-    public void decrease() {
-        if (availableQuantity <= 0) {
+    public boolean hasAvailable(int requiredCount) {
+        return availableQuantity() >= requiredCount;
+    }
+
+    public void reserve(int count) {
+        if (reservedCount + count > totalQuantity) {
             throw new IllegalStateException("객실 재고가 부족합니다.");
         }
-
-        this.availableQuantity -= 1;
+        this.reservedCount += count;
     }
 
-    public void increase() {
-        if (availableQuantity < totalQuantity) {
-            this.availableQuantity += 1;
-        }
+    public void cancel(int count) {
+        this.reservedCount = Math.max(0, reservedCount - count);
     }
 
     @Embeddable
