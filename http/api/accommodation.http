@@ -21,3 +21,10 @@ GET http://localhost:8080/v1/accommodations/search
     page=0&
     size=10
 Content-Type: application/json
+
+### 숙소 상세 조회 (checkIn, checkOut, capacity)
+GET http://localhost:8080/v1/accommodations/1
+    ?checkIn={{checkIn}}&
+    checkOut={{checkOut}}&
+    capacity={{capacity}}
+Content-Type: application/json

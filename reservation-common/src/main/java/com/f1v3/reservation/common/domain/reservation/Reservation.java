@@ -38,23 +38,16 @@ public class Reservation extends BaseEntity {
     @Column(nullable = false)
     private LocalDate checkOut;
 
+    @Column(nullable = false)
+    private Long userId;
+
     // todo: 상태 값 (전환 가능한 상태 체크 필요) FSM -> if-else의 문제점 해결
     @Builder
-    private Reservation(Long roomTypeId, LocalDate checkIn, LocalDate checkOut) {
+    private Reservation(Long userId, Long roomTypeId, LocalDate checkIn, LocalDate checkOut) {
+        this.userId = userId;
         this.roomTypeId = roomTypeId;
         this.checkIn = checkIn;
         this.checkOut = checkOut;
-    }
-
-    /**
-     * 주어진 날짜 범위와 예약 기간이 겹치는지 확인
-     *
-     * @param checkIn  체크인 날짜
-     * @param checkOut 체크아웃 날짜
-     * @return 겹치면 true, 아니면 false
-     */
-    public boolean isOverlapping(LocalDate checkIn, LocalDate checkOut) {
-        return this.checkIn.isBefore(checkOut) && checkIn.isBefore(this.checkOut);
     }
 
     /*

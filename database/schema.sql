@@ -2,6 +2,9 @@ create database if not exists reservation;
 
 use reservation;
 
+DROP TABLE IF EXISTS reservations;
+DROP TABLE IF EXISTS reservation_holds;
+DROP TABLE IF EXISTS room_type_stocks;
 DROP TABLE IF EXISTS room_units;
 DROP TABLE IF EXISTS room_types;
 DROP TABLE IF EXISTS accommodation_status_histories;
@@ -149,7 +152,6 @@ CREATE TABLE room_units
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
-
 -- 예약 테이블 (검색 기능 구현용)
 -- 고객이 객실 타입(room_type)을 선택하여 예약 생성
 -- 체크인 시점에 공급자가 실제 객실(room_unit)을 배정
@@ -158,29 +160,47 @@ CREATE TABLE reservations
 (
     id           BIGINT PRIMARY KEY AUTO_INCREMENT,
     room_type_id BIGINT NOT NULL, # room_types 테이블의 id 참조 (예약은 타입 단위로)
+    user_id BIGINT      NOT NULL,
     check_in     DATE   NOT NULL,
     check_out    DATE   NOT NULL,
     created_at   DATETIME DEFAULT NOW(),
     updated_at   DATETIME DEFAULT NOW() ON UPDATE NOW(),
 
     INDEX idx_room_type_dates (room_type_id, check_in, check_out),
-    FOREIGN KEY (room_type_id) REFERENCES room_types (id)
+    FOREIGN KEY (room_type_id) REFERENCES room_types (id),
+    FOREIGN KEY (user_id) REFERENCES users (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
--- 예약 확정 테이블 (향후 구현 예정)
--- 결제 완료 후 예약이 확정되면 실제 객실(room_unit)을 배정하는 테이블
--- CREATE TABLE reservation_confirmations
--- (
---     id              BIGINT PRIMARY KEY AUTO_INCREMENT,
---     reservation_id  BIGINT      NOT NULL,  # reservations 테이블의 id
---     room_unit_id    BIGINT      NOT NULL,  # 실제 배정된 객실 (room_units 테이블의 id)
---     user_id         BIGINT      NOT NULL,  # 예약자
---     status          VARCHAR(30) NOT NULL,  # ENUM('CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED')
---     payment_id      BIGINT      NULL,      # 결제 정보
---     confirmed_at    DATETIME    NOT NULL,  # 예약 확정 시각
---     created_at      DATETIME DEFAULT NOW(),
---     updated_at      DATETIME DEFAULT NOW() ON UPDATE NOW(),
---
--- ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+-- 임시 예약 테이블
+CREATE TABLE reservation_holds
+(
+    hold_id      VARCHAR(36) PRIMARY KEY,
+    user_id      BIGINT      NOT NULL,
+    room_type_id BIGINT      NOT NULL,
+    check_in     DATE        NOT NULL,
+    check_out    DATE        NOT NULL,
+    capacity     INT         NOT NULL, # 필요한가
+    status       VARCHAR(20) NOT NULL,
+    expired_at   DATETIME    NOT NULL,
+    created_at   DATETIME DEFAULT NOW(),
+    updated_at   DATETIME DEFAULT NOW() ON UPDATE NOW()
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+-- 객실 타입 재고(일자별)
+CREATE TABLE room_type_stocks
+(
+    room_type_id       BIGINT NOT NULL,
+    target_date        DATE   NOT NULL,
+    total_quantity     INT    NOT NULL,
+    available_quantity INT    NOT NULL,
+    created_at         DATETIME DEFAULT NOW(),
+    updated_at         DATETIME DEFAULT NOW() ON UPDATE NOW(),
+
+    PRIMARY KEY (room_type_id, target_date)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+desc reservations;
 

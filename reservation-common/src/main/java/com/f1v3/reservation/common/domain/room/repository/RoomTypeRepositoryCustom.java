@@ -1,6 +1,7 @@
 package com.f1v3.reservation.common.domain.room.repository;
 
 import com.f1v3.reservation.common.domain.room.dto.RoomResponseDto;
+import com.f1v3.reservation.common.domain.room.dto.RoomTypeSummaryDto;
 import org.springframework.data.repository.NoRepositoryBean;
 
 import java.util.List;
@@ -14,4 +15,6 @@ import java.util.List;
 public interface RoomTypeRepositoryCustom {
 
     List<RoomResponseDto> findRoomsByAccommodationId(Long accommodationId);
+
+    List<RoomTypeSummaryDto> findAllByAccommodationId(Long accommodationId);
 }

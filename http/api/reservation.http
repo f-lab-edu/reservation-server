@@ -1,0 +1,20 @@
+@token = Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NjQzMTM5MTAsImV4cCI6MTc2NDMxNTcxMH0.t8fSAABPmWtzmQCU7UbtORpMPZL_n7pqSviDac9DWRY
+
+### 숙소 임시 예약 생성
+
+POST http://localhost:8080/v1/reservation-holds
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "roomTypeId": 1,
+  "checkIn": "2026-01-03",
+  "checkOut": "2026-01-04",
+  "capacity": 2
+}
+
+
+### 숙소 예약 확정
+POST http://localhost:8080/v1/reservation-holds/reservation:hold:1:2026-01-03:2026-01-04:1/confirm
+Authorization: {{token}}
+Content-Type: application/json

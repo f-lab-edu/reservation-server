@@ -22,8 +22,6 @@ public enum ErrorCode {
     TERM_CODE_INVALID(ErrorStatus.BAD_REQUEST, 2002, "올바르지 않은 약관 코드입니다."),
     TERM_REQUIRED_NOT_AGREED(ErrorStatus.BAD_REQUEST, 2003, "필수 약관에 동의하지 않았습니다."),
     TERM_VERSION_CONSTRAINT_VIOLATION(ErrorStatus.CONFLICT, 2004, "약관 생성 시 버전 충돌이 발생했습니다. 버전을 확인해주세요."),
-    TERM_REQUIRED_DISPLAY_ORDER_INVALID(ErrorStatus.BAD_REQUEST, 2005, "필수 약관의 표시 순서는 0 ~ 500 사이의 값이어야 합니다."),
-    TERM_OPTIONAL_DISPLAY_ORDER_INVALID(ErrorStatus.BAD_REQUEST, 2006, "선택 약관의 표시 순서는 501 ~ 1000 사이의 값이어야 합니다."),
 
     /*
     핸드폰 인증(PhoneVerification) [code: 3xxx]
@@ -63,6 +61,19 @@ public enum ErrorCode {
     객실 타입(Room Type) [code: 7xxx]
      */
     ROOM_TYPE_NOT_FOUND(ErrorStatus.NOT_FOUND, 7001, "객실 타입을 찾을 수 없습니다."),
+    ROOM_TYPE_STOCK_NOT_FOUND(ErrorStatus.NOT_FOUND, 7002, "객실 재고 정보를 찾을 수 없습니다."),
+    ROOM_TYPE_STOCK_NOT_ENOUGH(ErrorStatus.BAD_REQUEST, 7003, "해당 일정에 사용할 수 있는 객실 재고가 없습니다."),
+    ROOM_TYPE_CAPACITY_EXCEEDED(ErrorStatus.BAD_REQUEST, 7004, "요청한 숙박 인원이 객실 타입의 최대 수용 인원을 초과합니다."),
+
+    /*
+    예약(Reservation) [code: 8xxx]
+     */
+    RESERVATION_HOLD_NOT_FOUND(ErrorStatus.NOT_FOUND, 8001, "임시 예약 정보를 찾을 수 없습니다."),
+    RESERVATION_HOLD_ALREADY_PROCESSED(ErrorStatus.CONFLICT, 8003, "이미 처리된 임시 예약입니다."),
+    RESERVATION_HOLD_FORBIDDEN(ErrorStatus.FORBIDDEN, 8004, "해당 임시 예약에 접근할 수 없습니다."),
+    RESERVATION_LOCK_TIMEOUT(ErrorStatus.CONFLICT, 8005, "동일 일정 요청을 처리 중입니다. 잠시 후 다시 시도해주세요."),
+    RESERVATION_HOLD_EXPIRED(ErrorStatus.BAD_REQUEST, 8006, "임시 예약이 만료되었습니다."),
+
 
     /*
     서버 에러 정의 [code: 9xxx]

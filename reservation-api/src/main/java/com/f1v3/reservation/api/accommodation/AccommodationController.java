@@ -1,15 +1,13 @@
 package com.f1v3.reservation.api.accommodation;
 
+import com.f1v3.reservation.api.accommodation.dto.FindAccommodationResponse;
 import com.f1v3.reservation.api.accommodation.dto.SearchAccommodationResponse;
 import com.f1v3.reservation.common.api.response.ApiResponse;
 import com.f1v3.reservation.common.api.response.PagedResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
@@ -43,6 +41,17 @@ public class AccommodationController {
     ) {
         PagedResponse<SearchAccommodationResponse> response =
                 accommodationService.search(keyword, checkIn, checkOut, capacity, pageable);
+        return ApiResponse.success(response);
+    }
+
+    @GetMapping("/{accommodationId}")
+    public ApiResponse<FindAccommodationResponse> getDetailAccommodation(
+            @PathVariable Long accommodationId,
+            @RequestParam(required = true) LocalDate checkIn,
+            @RequestParam(required = true) LocalDate checkOut,
+            @RequestParam(required = true) int capacity
+    ) {
+        FindAccommodationResponse response = accommodationService.findAccommodation(accommodationId, checkIn, checkOut, capacity);
         return ApiResponse.success(response);
     }
 }
