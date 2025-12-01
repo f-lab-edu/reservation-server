@@ -52,24 +52,16 @@ available = totalQuantity
 
 # 3. v2 설계 상세
 
-## 3.1 Redis 구조 (TTL 기반)
+## 3.1 Redis 구조 (TTL 기반, JSON)
 
-### Hash
+- `hold:{holdId}`: JSON 값(roomTypeId, checkIn, checkOut, userId, clientHoldKey, createdAt, expiredAt), `SET ... EX 600`(
+  10분).
+- `hold:idx:{userId}:{roomTypeId}:{checkIn}:{checkOut}` → holdId (`SETNX`, EX 10분) : 동일 회원/구간 단일 가계약 보장.
+- `hold:snapshot:{clientHoldKey}:{roomTypeId}:{checkIn}:{checkOut}` → holdId (`SETNX`, EX 10분) : 멱등/중복 클릭 합치기, 충돌 시 409.
+- `hold-count:{roomTypeId}:{date}`: `INCRBY/DECRBY 1` + `EXPIRE 600`. 값이 0 이하가 되면 즉시 삭제.
+- KEYS/SCAN 미사용: stayDays로 결정적 키를 만들어 MGET/파이프라인 조회.
 
-- Key: `reservation:hold:{roomTypeId}:{checkIn}:{checkOut}:{userId}`
-- TTL: 가계약 유지 시간 (예: 10분)
-- Fields:
-    - qty
-    - roomTypeId
-    - checkIn
-    - checkOut
-    - userId
-    - createdAt
-    - updatedAt
-
-### 변화점
-
-- **ZSET 인덱스 제거**: TTL이 자동으로 만료를 처리하므로 인덱싱 불필요.
+재호출 정책: 동일 회원·구간 요청이 오면 기존 가계약을 삭제(hold-count DECR→DEL, 키 삭제) 후 새로 생성한다. 기존 holdId로 결제 시 만료/삭제 응답 처리.
 
 ## 3.2 RoomType / RoomTypeStock 책임 분리
 
@@ -96,15 +88,15 @@ available = totalQuantity
 
 # 4. v1 → v2 변화 요약
 
-| 항목       | v1 (배치)           | v2 (실시간)                |
-|----------|-------------------|-------------------------|
-| 가계약 저장   | Redis Hash + ZSET | Redis Hash(TTL)         |
-| 가계약 만료   | 배치 처리             | TTL 자동 만료               |
-| 재고 차감    | 가계약 생성 시 재고 차감    | 확정 예약만 반영               |
-| 재고 계산    | RoomTypeStock만 기준 | total - reserved - hold |
-| 정합성      | 배치 실패 시 위험        | 실시간 계산으로 정합성 상승         |
-| Redis 역할 | 가계약 + 인덱스         | 가계약(임시 저장)              |
-| 아키텍처 복잡도 | 높음                | 간결                      |
+| 항목       | v1 (배치)           | v2 (실시간)                    |
+|----------|-------------------|-----------------------------|
+| 가계약 저장   | Redis Hash + ZSET | Redis JSON + 인덱스/스냅샷 키(TTL) |
+| 가계약 만료   | 배치 처리             | TTL 자동 만료                   |
+| 재고 차감    | 가계약 생성 시 재고 차감    | 확정 예약만 반영                   |
+| 재고 계산    | RoomTypeStock만 기준 | total - reserved - hold     |
+| 정합성      | 배치 실패 시 위험        | 실시간 계산으로 정합성 상승             |
+| Redis 역할 | 가계약 + 인덱스         | 가계약(임시 저장)                  |
+| 아키텍처 복잡도 | 높음                | 간결                          |
 
 # 5. 개선 효과
 
@@ -130,22 +122,37 @@ available = totalQuantity
 
 ---
 
-# 6. 앞으로의 TODO
+# 6. 구현 체크리스트 (v2)
 
-1. **재고 조회 쿼리 최적화**
-    - `reservedCount` + `holdCount` 조합을 빠르게 가져오는 쿼리 설계
-    - Full scan 방지
+1. DTO/API: `clientHoldKey` 필수(UUID), qty 제거. 엔드포인트 `/v1/holds`, `/v1/holds/{holdId}/confirm`,
+   `DELETE /v1/holds/{holdId}`.
+2. Redis 접근: JSON `SET ... EX 600`, idx/snapshot `SETNX` + EX, hold-count INCR/DECR + EXPIRE 600(0 이하면 DEL).
+3. 재호출 처리: 동일 회원·구간 요청 시 기존 가계약 삭제 후 새로 생성. 멱등 토큰 충돌 시 409.
+4. 가용성 조회: stayDays로 `hold-count:{roomTypeId}:{date}` 키 생성 후 MGET/파이프라인. KEYS/SCAN 금지.
+5. 락: roomType+숙박일 MultiLock(대기/보유 1s/5s 유지).
+6. 에러 매핑: HOLD_EXPIRED, HOLD_NOT_FOUND, HOLD_KEY_CONFLICT(409), LOCK_TIMEOUT(409/429), FORBIDDEN(403) 등 명시.
+7. 테스트: 생성/재호출/충돌, 동시성(락), 확정/취소 DECR/DEL, TTL 만료 후 가용성 복원, KEYS 미사용 검증.
 
-2. **Redis 멀티키 holdCount 계산 전략 확정**
-    - `roomTypeId:{date}` 단위로 hold 카운트 누계 저장 여부 검토
+---
 
-3. **FSM(상태머신) 도입 고려**
-    - HOLDING → CONFIRMED → CANCELED → EXPIRED
-    - 상태 전이를 명확히 정의하여 로직 안정성 강화
+# 7. 멱등 토큰(clientHoldKey) 정책
 
-4. **ReservationHold TTL 정책 튜닝**
-    - Device/UX 측에서 적절한 유지시간 검토
+- 생성 주체: **클라이언트가 UUID(v4) 또는 ULID**로 생성하고 요청에 포함한다. 서버는 형식 검증만 수행한다.
+- 스코프: 키는 구간을 포함해 매핑한다. 예) `hold:snapshot:{clientHoldKey}:{roomTypeId}:{checkIn}:{checkOut}` → holdId.
+- 규칙:
+    - 동일 `clientHoldKey+구간` 재호출은 기존 가계약을 반환하거나(멱등) 정책에 따라 기존 가계약 삭제 후 재생성. 현재는 **삭제 후 재생성**으로 결정.
+    - 다른 가계약에 이미 매핑된 `clientHoldKey+구간` 조합이면 409(CONFLICT).
+    - 토큰 누락/포맷 오류는 400(BAD_REQUEST).
+- 시퀀스 기반 발급은 불필요: TTL 데이터 특성상 DB 시퀀스/epoch 조합을 쓰지 않고 난수형 키로 충분하며, 오버헤드와 단일 발급 지점을 없앤다.***
 
-5. **MultiLock 유지 여부 검토**
-    - 가계약이 재고를 직접 변경하진 않더라도  
-      “특정 구간에 대한 가계약 중복 방지”는 여전히 중요할 수 있음.
+---
+
+# 8. 예외/정합성 정책
+
+- 락 획득 실패: 409(CONFLICT) 고정.
+- 중복 confirm/cancel: `DECRBY` 결과가 0 이하 등 이미 처리된 가계약이면 409(CONFLICT) + `RESERVATION_HOLD_ALREADY_PROCESSED`(또는 동등 코드) 반환.
+- 스테일 키(hold:idx/snapshot는 남았지만 hold:{id} 없음):
+    - 오류 반환(404 NOT_FOUND 또는 EXPIRED 취급) 후 idx/snapshot 키를 즉시 정리해 다음 요청이 깨끗이 처리되도록 한다.
+- 멱등 토큰 충돌: `clientHoldKey+구간`이 다른 가계약에 매핑되어 있으면 409(CONFLICT) + `RESERVATION_HOLD_KEY_CONFLICT`.
+- 권한 위반: userId 불일치 시 403(FORBIDDEN).
+- 만료: expiredAt < now면 400/408(`RESERVATION_HOLD_EXPIRED`).
