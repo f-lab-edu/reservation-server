@@ -28,20 +28,20 @@ public class ReservationHoldController {
         return reservationHoldFacade.createReservationHold(user.id(), request);
     }
 
-    @PostMapping("/{holdKey}/confirm")
+    @PostMapping("/{holdId}/confirm")
     public void confirmHold(
-            @PathVariable String holdKey,
+            @PathVariable String holdId,
             @Login LoginUser user
     ) {
-        reservationHoldFacade.confirmReservationHold(holdKey, user.id());
+        reservationHoldFacade.confirmReservationHold(holdId, user.id());
     }
 
-    @DeleteMapping("/{holdKey}")
+    @DeleteMapping("/{holdId}")
     public void cancelHold(
-            @PathVariable String holdKey,
+            @PathVariable String holdId,
             @Login LoginUser user
     ) {
-        // todo: 임시 예약 취소 API 구현 예정
+        reservationHoldFacade.cancelReservationHold(holdId, user.id());
     }
 
 }
