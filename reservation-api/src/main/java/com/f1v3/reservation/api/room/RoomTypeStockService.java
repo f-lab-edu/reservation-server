@@ -7,13 +7,9 @@ import com.f1v3.reservation.common.domain.room.repository.RoomTypeStockRepositor
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.f1v3.reservation.common.api.error.ErrorCode.ROOM_TYPE_STOCK_NOT_ENOUGH;
 
@@ -33,7 +29,6 @@ public class RoomTypeStockService {
      * 주어진 객실 타입과 숙박일자에 대해 재고 엔티티가 모두 존재하는지 확인하고, 존재하지 않는 경우 생성한다.
      * reservedCount 기반으로만 초기화하며, 가용성 검증/차감은 별도 단계에서 수행한다.
      */
-    @Transactional
     public List<RoomTypeStock> ensureStocks(RoomType roomType, List<LocalDate> stayDays) {
         List<RoomTypeStock> exist = roomTypeStockRepository.findAllByRoomTypeIdAndTargetDates(roomType.getId(), stayDays);
         if (exist.size() == stayDays.size()) {
@@ -52,19 +47,19 @@ public class RoomTypeStockService {
                 .toList();
 
         if (!created.isEmpty()) {
-
-            // fixme: 재시도 로직이 필요할까?
             roomTypeStockRepository.saveAll(created);
             roomTypeStockRepository.flush();
         }
 
-        return exist;
+        List<RoomTypeStock> allStocks = new ArrayList<>(exist.size() + created.size());
+        allStocks.addAll(exist);
+        allStocks.addAll(created);
+        return allStocks;
     }
 
     /**
      * 예약 확정 시 reservedCount를 증가시킨다.
      */
-    @Transactional
     public void reserve(RoomType roomType, List<LocalDate> stayDays, int quantity) {
         List<RoomTypeStock> stocks = roomTypeStockRepository.findAllByRoomTypeIdAndTargetDates(roomType.getId(), stayDays);
 
