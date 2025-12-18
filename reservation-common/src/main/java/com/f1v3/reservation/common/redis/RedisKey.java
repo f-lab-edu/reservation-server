@@ -9,14 +9,12 @@ public final class RedisKey {
     }
 
     /**
-     * 홀드 해시 키 포맷: reservation:hold:{roomTypeId}:{checkIn}:{checkOut}:{userId}
+     * 가계약 키 포맷
      */
-    public static final String HOLD_HASH_FORMAT = "reservation:hold:%d:%s:%s:%d";
-
-    /**
-     * 만료 스캔을 위한 ZSET 인덱스 키.
-     */
-    public static final String HOLD_INDEX = "reservation:hold:index";
+    public static final String HOLD_KEY_FORMAT = "reservation:hold:%s";
+    public static final String HOLD_IDX_FORMAT = "reservation:hold:idx:%d:%d:%s:%s";
+    public static final String HOLD_IDEMPOTENT_FORMAT = "reservation:hold:idempotent:%s:%d:%s:%s";
+    public static final String HOLD_COUNT_FORMAT = "reservation:hold:count:%d:%s";
 
     /**
      * 해시 필드.
@@ -29,9 +27,6 @@ public final class RedisKey {
         public static final String ROOM_TYPE_ID = "roomTypeId";
         public static final String CHECK_IN = "checkIn";
         public static final String CHECK_OUT = "checkOut";
-        public static final String USER_ID = "userId";
-        public static final String CREATED_AT = "createdAt";
-        public static final String UPDATED_AT = "updatedAt";
         public static final String EXPIRED_AT = "expiredAt";
     }
 }
