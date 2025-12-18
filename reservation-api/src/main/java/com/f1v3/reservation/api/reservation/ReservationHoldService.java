@@ -1,29 +1,31 @@
 package com.f1v3.reservation.api.reservation;
 
+import com.f1v3.reservation.api.reservation.cache.ReservationHoldCache;
+import com.f1v3.reservation.api.reservation.cache.ReservationHoldCountCache;
+import com.f1v3.reservation.api.reservation.cache.ReservationHoldIdempotentCache;
+import com.f1v3.reservation.api.reservation.cache.ReservationHoldIndexCache;
 import com.f1v3.reservation.api.reservation.dto.ConfirmReservationHoldResponse;
 import com.f1v3.reservation.api.reservation.dto.CreateReservationHoldRequest;
 import com.f1v3.reservation.api.reservation.dto.ReservationHoldResponse;
 import com.f1v3.reservation.common.api.error.ReservationException;
+import com.f1v3.reservation.common.domain.reservation.ReservationHold;
 import com.f1v3.reservation.common.domain.room.RoomType;
-import com.f1v3.reservation.common.redis.RedisRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.core.RedisOperations;
-import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static com.f1v3.reservation.common.api.error.ErrorCode.*;
-import static com.f1v3.reservation.common.redis.RedisKey.HOLD_HASH_FORMAT;
-import static com.f1v3.reservation.common.redis.RedisKey.HashField.*;
 
 /**
- * 임시 예약 서비스
+ * 가계약 서비스 레이어
  *
  * @author Seungjo, Jeong
  */
@@ -32,94 +34,165 @@ import static com.f1v3.reservation.common.redis.RedisKey.HashField.*;
 @RequiredArgsConstructor
 public class ReservationHoldService {
 
-    private static final Duration HOLD_EXPIRE_WINDOW = Duration.ofMinutes(10);
+    private static final Duration HOLD_EXPIRE_MINUTES = Duration.ofMinutes(10);
 
-    private final RedisRepository redisRepository;
+    private final ReservationHoldCache holdCache;
+    private final ReservationHoldIndexCache indexCache;
+    private final ReservationHoldIdempotentCache idempotentCache;
+    private final ReservationHoldCountCache countCache;
 
     /**
-     * 가계약 생성 후 Redis Hash 저장 (TTL 기반, 만료 배치 없이 처리)
+     * 가계약 생성 후 Redis JSON 저장 (TTL 기반, 만료 배치 없이 처리)
      */
-    public ReservationHoldResponse createHold(
-            Long userId,
-            RoomType roomType,
-            CreateReservationHoldRequest request
-    ) {
+    public ReservationHoldResponse createHold(Long userId, RoomType roomType, CreateReservationHoldRequest request) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiredAt = now.plus(HOLD_EXPIRE_WINDOW);
-        String key = redisKey(roomType.getId(), request.checkIn(), request.checkOut(), userId);
+        LocalDateTime expiredAt = now.plus(HOLD_EXPIRE_MINUTES);
+        LocalDate checkIn = request.checkIn();
+        LocalDate checkOut = request.checkOut();
+        List<LocalDate> stayDays = stayDays(checkIn, checkOut);
 
-        try {
-            redisRepository.execute(new SessionCallback<List<Object>>() {
-                @SuppressWarnings({"unchecked", "rawtypes"})
-                @Override
-                public List<Object> execute(RedisOperations operations) throws DataAccessException {
-                    operations.multi(); // tx start
-                    operations.opsForHash().increment(key, QTY, 1);
-                    operations.opsForHash().putIfAbsent(key, ROOM_TYPE_ID, roomType.getId().toString());
-                    operations.opsForHash().putIfAbsent(key, CHECK_IN, request.checkIn().toString());
-                    operations.opsForHash().putIfAbsent(key, CHECK_OUT, request.checkOut().toString());
-                    operations.opsForHash().putIfAbsent(key, USER_ID, userId.toString());
-                    operations.opsForHash().putIfAbsent(key, CREATED_AT, now.toString());
-                    operations.opsForHash().put(key, UPDATED_AT, now.toString());
-                    operations.opsForHash().put(key, EXPIRED_AT, expiredAt.toString());
-                    operations.expire(key, HOLD_EXPIRE_WINDOW);
-                    return operations.exec(); // tx commit
-                }
-            });
-        } catch (DataAccessException e) {
-            log.error("Failed to create reservation hold in Redis. roomTypeId={}, checkIn={}, checkOut={}, userId={}",
-                    roomType.getId(), request.checkIn(), request.checkOut(), userId, e);
-            throw e; // fixme: 예외 어떻게 처리할지 고민
-        }
+        // 1. 기존 가계약 정리 (같은 사용자가 동일 객실타입/기간으로 가계약을 여러개 생성하는 경우 방지)
+        indexCache.findHoldId(userId, roomType.getId(), checkIn, checkOut)
+                .ifPresent(existingHoldId -> cleanupExistingHold(existingHoldId, roomType.getId(), userId, checkIn, checkOut));
 
-        return new ReservationHoldResponse(key, expiredAt);
+        // 2. 가계약 생성
+        String holdId = UUID.randomUUID().toString();
+        ReservationHold hold = new ReservationHold(
+                holdId,
+                roomType.getId(),
+                checkIn,
+                checkOut,
+                userId,
+                request.idempotentKey(),
+                now,
+                expiredAt
+        );
+
+        // 3. 멱등키 확인 (중복 요청 방지)
+        ensureIdempotentKeyAvailable(request.idempotentKey(), roomType.getId(), checkIn, checkOut, holdId);
+
+        // fixme: 하나의 Lua Script로 처리하여 라운드 트립을 1회로 만들기
+        //  (장애 발생시 정합성을 보장하는 방안을 고려해야 함.)
+        holdCache.save(hold, HOLD_EXPIRE_MINUTES);
+        indexCache.save(userId, roomType.getId(), checkIn, checkOut, holdId, HOLD_EXPIRE_MINUTES);
+        idempotentCache.save(request.idempotentKey(), holdId, roomType.getId(), checkIn, checkOut, HOLD_EXPIRE_MINUTES);
+        stayDays.forEach(day -> countCache.increment(roomType.getId(), day, HOLD_EXPIRE_MINUTES));
+
+        return new ReservationHoldResponse(holdId, expiredAt);
     }
 
-    public ConfirmReservationHoldResponse confirmReservationHold(String holdKey, Long userId) {
-        // 1. Redis에서 홀드 정보 조회
-        List<Object> values = redisRepository.getHashValues(holdKey, List.of(QTY, ROOM_TYPE_ID, CHECK_IN, CHECK_OUT, EXPIRED_AT, USER_ID));
+    public ConfirmReservationHoldResponse confirmReservationHold(String holdId, Long userId) {
+        ReservationHold hold = getCacheOrThrowIfProcessed(holdId);
+        validateHold(hold, userId);
+        ensureHoldNotProcessed(hold);
 
-        if (values == null || values.contains(null)) {
-            throw new ReservationException(RESERVATION_HOLD_NOT_FOUND, log::info);
+        stayDays(hold.checkIn(), hold.checkOut())
+                .forEach(day -> countCache.decrement(hold.roomTypeId(), day, HOLD_EXPIRE_MINUTES));
+
+        deleteAllKeys(hold);
+
+        return new ConfirmReservationHoldResponse(holdId, hold.roomTypeId(), hold.checkIn(), hold.checkOut(), 1);
+    }
+
+    public void cancelReservationHold(String holdId, Long userId) {
+        ReservationHold hold = getCacheOrThrowIfProcessed(holdId);
+        validateHold(hold, userId);
+        ensureHoldNotProcessed(hold);
+
+        stayDays(hold.checkIn(), hold.checkOut())
+                .forEach(day -> countCache.decrement(hold.roomTypeId(), day, HOLD_EXPIRE_MINUTES));
+
+        deleteAllKeys(hold);
+    }
+
+    public Map<LocalDate, Long> getHoldCounts(Long roomTypeId, List<LocalDate> stayDays) {
+        Map<LocalDate, Long> counts = new HashMap<>();
+        for (LocalDate day : stayDays) {
+            counts.put(day, countCache.get(roomTypeId, day));
         }
+        return counts;
+    }
 
-        // 2. 사용자 검증 (홀드 생성한 사용자와 동일한지)
-        Long holdUserId = Long.parseLong(values.get(5).toString());
-        if (!holdUserId.equals(userId)) {
+    private void cleanupExistingHold(String holdId, Long roomTypeId, Long userId, LocalDate checkIn, LocalDate checkOut) {
+        holdCache.find(holdId).ifPresentOrElse(
+                existing -> {
+                    stayDays(existing.checkIn(), existing.checkOut())
+                            .forEach(day -> countCache.decrement(existing.roomTypeId(), day, HOLD_EXPIRE_MINUTES));
+                    deleteAllKeys(existing);
+                },
+                () -> {
+                    stayDays(checkIn, checkOut).forEach(day -> countCache.decrement(roomTypeId, day, HOLD_EXPIRE_MINUTES));
+                    indexCache.delete(userId, roomTypeId, checkIn, checkOut);
+                    throw new ReservationException(RESERVATION_HOLD_NOT_FOUND, log::info);
+                }
+        );
+    }
+
+    private ReservationHold getCacheOrThrowIfProcessed(String holdId) {
+        return holdCache.find(holdId)
+                .orElseThrow(() -> new ReservationException(RESERVATION_HOLD_ALREADY_PROCESSED, log::info));
+    }
+
+    private void validateHold(ReservationHold hold, Long userId) {
+        if (!hold.userId().equals(userId)) {
             throw new ReservationException(RESERVATION_HOLD_FORBIDDEN, log::warn);
         }
-
-        // 3. 홀드 정보 파싱
-        int qty = Integer.parseInt(values.get(0).toString());
-        Long roomTypeId = Long.parseLong(values.get(1).toString());
-        LocalDate checkIn = LocalDate.parse(values.get(2).toString());
-        LocalDate checkOut = LocalDate.parse(values.get(3).toString());
-        LocalDateTime expiredAt = LocalDateTime.parse(values.get(4).toString());
-
-        LocalDateTime now = LocalDateTime.now();
-
-        // 4. 만료 검증
-        if (expiredAt.isBefore(now)) {
+        if (hold.expiredAt().isBefore(LocalDateTime.now())) {
+            cleanupHoldCounts(hold);
+            deleteAllKeys(hold);
             throw new ReservationException(RESERVATION_HOLD_EXPIRED, log::info);
         }
+    }
 
-        // 5. Redis에서 홀드 정보 삭제
-        redisRepository.execute(new SessionCallback<List<Object>>() {
-            @SuppressWarnings({"unchecked"})
-            @Override
-            public List<Object> execute(RedisOperations operations) throws DataAccessException {
-                operations.multi();
-                // 임시 예약 정보 삭제
-                operations.delete(holdKey);
-                return operations.exec();
+    private void ensureHoldNotProcessed(ReservationHold hold) {
+        List<LocalDate> stayDays = stayDays(hold.checkIn(), hold.checkOut());
+        for (LocalDate day : stayDays) {
+            long count = countCache.get(hold.roomTypeId(), day);
+            if (count <= 0) {
+                cleanupHoldCounts(hold);
+                deleteAllKeys(hold);
+                throw new ReservationException(RESERVATION_HOLD_ALREADY_PROCESSED, log::info);
             }
-        });
-
-        return new ConfirmReservationHoldResponse(holdKey, roomTypeId, checkIn, checkOut, qty);
+        }
     }
 
-    private String redisKey(Long roomTypeId, LocalDate checkIn, LocalDate checkOut, Long userId) {
-        return String.format(HOLD_HASH_FORMAT, roomTypeId, checkIn, checkOut, userId);
+    private void ensureIdempotentKeyAvailable(String idempotentKey, Long roomTypeId, LocalDate checkIn, LocalDate checkOut, String holdId) {
+
+        // 1. 멱등 키가 없으면 저장하고 종료
+        if (idempotentCache.setIfAbsent(idempotentKey, roomTypeId, checkIn, checkOut, holdId, HOLD_EXPIRE_MINUTES)) {
+            return;
+        }
+
+        // 2. 멱등 키가 있으면 기존 가계약 확인
+        idempotentCache.find(idempotentKey, roomTypeId, checkIn, checkOut)
+                .ifPresentOrElse(existingHoldId -> holdCache.find(existingHoldId)
+                                .ifPresentOrElse(existingHold -> {
+                                            throw new ReservationException(RESERVATION_HOLD_KEY_CONFLICT, log::info);
+                                        },
+                                        () -> {
+                                            idempotentCache.delete(idempotentKey, roomTypeId, checkIn, checkOut);
+                                            throw new ReservationException(RESERVATION_HOLD_NOT_FOUND, log::info);
+                                        }
+                                ),
+                        () -> {
+                            idempotentCache.delete(idempotentKey, roomTypeId, checkIn, checkOut);
+                            throw new ReservationException(RESERVATION_HOLD_NOT_FOUND, log::info);
+                        }
+                );
     }
 
+    private void cleanupHoldCounts(ReservationHold hold) {
+        stayDays(hold.checkIn(), hold.checkOut())
+                .forEach(day -> countCache.delete(hold.roomTypeId(), day));
+    }
+
+    private void deleteAllKeys(ReservationHold hold) {
+        holdCache.delete(hold.holdId());
+        indexCache.delete(hold.userId(), hold.roomTypeId(), hold.checkIn(), hold.checkOut());
+        idempotentCache.delete(hold.idempotentKey(), hold.roomTypeId(), hold.checkIn(), hold.checkOut());
+    }
+
+    private List<LocalDate> stayDays(LocalDate checkIn, LocalDate checkOut) {
+        return checkIn.datesUntil(checkOut).toList();
+    }
 }
