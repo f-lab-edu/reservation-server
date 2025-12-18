@@ -15,11 +15,10 @@ import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 import static com.f1v3.reservation.common.api.error.ErrorCode.*;
 
@@ -33,8 +32,8 @@ import static com.f1v3.reservation.common.api.error.ErrorCode.*;
 @RequiredArgsConstructor
 public class ReservationHoldFacade {
 
-    private static final long LOCK_WAIT_MILLIS = 1_000L;
-    private static final long LOCK_LEASE_MILLIS = 5_000L;
+    private static final long LOCK_WAIT_MILLIS = 3_000L;
+    private static final long LOCK_LEASE_MILLIS = 10_000L;
     private static final String LOCK_KEY_FORMAT = "lock:room-type:%d:date:%s";
 
     private final ReservationHoldService reservationHoldService;
@@ -44,8 +43,8 @@ public class ReservationHoldFacade {
     private final ReservationService reservationService;
 
     /**
-     * 임시 예약 생성 요청
-     * 1. RoomType+숙박일 단위로 Redisson MultiLock 획득(대기/보유 시간 제한)
+     * 가계약 생성 요청
+     * 1. RoomType + 숙박일 단위로 Redisson MultiLock 획득(대기/보유 시간 제한)
      * 2. 일자별 RoomTypeStock 확보/보정 후 재고 차감 준비
      * 3. ReservationHold 생성 및 만료 시각 설정
      */
@@ -64,7 +63,7 @@ public class ReservationHoldFacade {
 
         // 3. 객실 타입의 숙박 일자별로 락 획득 (Multi-Lock)
         RLock lock = redissonClient.getMultiLock(stayDays.stream()
-                .sorted()
+                .sorted() /* 식사하는 철학자 문제 방지 */
                 .map(date -> redissonClient.getLock(lockKey(roomType.getId(), date)))
                 .toArray(RLock[]::new));
 
@@ -83,15 +82,13 @@ public class ReservationHoldFacade {
             validateAvailability(request, stayDays, stocks);
 
             // 6. 임시 예약 생성 후 레디스에 저장
-            return reservationHoldService.createHold(
-                    userId,
-                    roomType,
-                    request
-            );
+            return reservationHoldService.createHold(userId, roomType, request);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::warn,
-                    Map.of("roomTypeId", request.roomTypeId(), "stayDays", stayDays), e);
+            Map<String, Object> parameters = new HashMap<>();
+            parameters.put("roomTypeId", request.roomTypeId());
+            parameters.put("stayDays", stayDays);
+            throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::warn, parameters, e);
         } finally {
             if (locked) {
                 try {
@@ -107,10 +104,9 @@ public class ReservationHoldFacade {
      * 임시 예약 확인 및 예약 확정 처리 (결제가 완료된 경우 호출하는 것을 전제)
      * 1. Redis에서 임시 예약 정보 조회 및 검증 (존재 여부, 만료 여부)
      * 2. 임시 예약에 해당하는 재고 확정 처리 및 예약 생성
-     *
      */
-    public void confirmReservationHold(String holdKey, Long userId) {
-        ConfirmReservationHoldResponse response = reservationHoldService.confirmReservationHold(holdKey, userId);
+    public void confirmReservationHold(String holdId, Long userId) {
+        ConfirmReservationHoldResponse response = reservationHoldService.confirmReservationHold(holdId, userId);
 
         RoomType roomType = roomTypeRepository.findById(response.roomTypeId())
                 .orElseThrow(() -> new ReservationException(ROOM_TYPE_NOT_FOUND, log::info));
@@ -148,10 +144,16 @@ public class ReservationHoldFacade {
         }
     }
 
-    private List<LocalDate> getStayDays(LocalDate request, LocalDate request1) {
-        return Stream.iterate(request, date -> date.plusDays(1))
-                .limit(ChronoUnit.DAYS.between(request, request1))
-                .toList();
+    /**
+     * 가계약 취소 처리
+     */
+    public void cancelReservationHold(String holdId, Long userId) {
+        // todo: 가계약 취소 구현 필요 (락 처리가 필요한지 등)
+        reservationHoldService.cancelReservationHold(holdId, userId);
+    }
+
+    private List<LocalDate> getStayDays(LocalDate checkIn, LocalDate checkOut) {
+        return checkIn.datesUntil(checkOut).toList();
     }
 
     private String lockKey(Long roomTypeId, LocalDate date) {
@@ -159,6 +161,8 @@ public class ReservationHoldFacade {
     }
 
     private void validateDate(LocalDate checkIn, LocalDate checkOut) {
+        // todo: 최대 예약일 제한 추가해야 함. (락의 범위가 너무 커져 성능 저하 우려)
+
         if (!checkIn.isBefore(checkOut)) {
             Map<String, Object> parameters = Map.of("checkIn", checkIn, "checkOut", checkOut);
             throw new ReservationException(INVALID_REQUEST_PARAMETER, log::info, parameters);
@@ -177,15 +181,33 @@ public class ReservationHoldFacade {
     }
 
     private void validateAvailability(CreateReservationHoldRequest request, List<LocalDate> stayDays, List<RoomTypeStock> stocks) {
-        boolean notEnough = stocks.stream().anyMatch(stock -> !stock.hasAvailable(1));
-        if (notEnough) {
-            Map<String, Object> parameters = Map.of(
-                    "roomTypeId", request.roomTypeId(),
-                    "checkIn", request.checkIn(),
-                    "checkOut", request.checkOut(),
-                    "stayDays", stayDays
-            );
-            throw new ReservationException(ROOM_TYPE_STOCK_NOT_ENOUGH, log::info, parameters);
+        Map<LocalDate, RoomTypeStock> stockByDate = new HashMap<>();
+        stocks.forEach(stock -> stockByDate.put(stock.getRoomTypeStockPk().getTargetDate(), stock));
+
+        Map<LocalDate, Long> holdCounts = reservationHoldService.getHoldCounts(request.roomTypeId(), stayDays);
+
+        for (LocalDate day : stayDays) {
+            RoomTypeStock stock = stockByDate.get(day);
+            if (stock == null) {
+                Map<String, Object> parameters = Map.of(
+                        "roomTypeId", request.roomTypeId(),
+                        "missingDate", day
+                );
+                throw new ReservationException(ROOM_TYPE_STOCK_NOT_FOUND, log::info, parameters);
+            }
+
+            long holdCount = holdCounts.getOrDefault(day, 0L);
+            long available = (long) stock.getTotalQuantity() - stock.getReservedCount() - holdCount;
+            if (available < 1) {
+                Map<String, Object> parameters = Map.of(
+                        "roomTypeId", request.roomTypeId(),
+                        "checkIn", request.checkIn(),
+                        "checkOut", request.checkOut(),
+                        "stayDays", stayDays,
+                        "holdCount", holdCount
+                );
+                throw new ReservationException(ROOM_TYPE_STOCK_NOT_ENOUGH, log::info, parameters);
+            }
         }
     }
 }
