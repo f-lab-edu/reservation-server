@@ -18,12 +18,14 @@ import org.springframework.context.annotation.Configuration;
 public class RedissonConfig {
 
     private static final String REDISSON_HOST_PREFIX = "redis://";
+    private static final int DEFAULT_LOCK_WATCHDOG_TIMEOUT = 15000; // 15 seconds
     private final RedisProperties redisProperties;
 
     @Bean
     public RedissonClient redissonClient() {
         Config config = new Config();
-        config.useSingleServer()
+        config.setLockWatchdogTimeout(DEFAULT_LOCK_WATCHDOG_TIMEOUT)
+                .useSingleServer()
                 .setAddress(REDISSON_HOST_PREFIX + redisProperties.getHost() + ":" + redisProperties.getPort())
                 .setPassword(redisProperties.getPassword());
 
