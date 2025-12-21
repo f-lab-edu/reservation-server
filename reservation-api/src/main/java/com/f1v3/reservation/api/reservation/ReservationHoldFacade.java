@@ -1,6 +1,5 @@
 package com.f1v3.reservation.api.reservation;
 
-import com.f1v3.reservation.api.reservation.dto.ConfirmReservationHoldResponse;
 import com.f1v3.reservation.api.reservation.dto.CreateReservationHoldRequest;
 import com.f1v3.reservation.api.reservation.dto.ReservationHoldResponse;
 import com.f1v3.reservation.api.room.RoomTypeStockService;
@@ -97,58 +96,6 @@ public class ReservationHoldFacade {
                 }
             }
         }
-    }
-
-    /**
-     * 임시 예약 확인 및 예약 확정 처리 (결제가 완료된 경우 호출하는 것을 전제)
-     * 1. Redis에서 임시 예약 정보 조회 및 검증 (존재 여부, 만료 여부)
-     * 2. 임시 예약에 해당하는 재고 확정 처리 및 예약 생성
-     */
-    public void confirmReservationHold(String holdId, Long userId) {
-        ConfirmReservationHoldResponse response = reservationHoldService.confirmReservationHold(holdId, userId);
-
-        RoomType roomType = roomTypeRepository.findById(response.roomTypeId())
-                .orElseThrow(() -> new ReservationException(ROOM_TYPE_NOT_FOUND, log::info));
-
-        List<LocalDate> stayDays = getStayDays(response.checkIn(), response.checkOut());
-
-        RLock lock = redissonClient.getMultiLock(stayDays.stream()
-                .sorted()
-                .map(date -> redissonClient.getLock(lockKey(roomType.getId(), date)))
-                .toArray(RLock[]::new));
-
-        boolean locked = false;
-        try {
-            locked = lock.tryLock(LOCK_WAIT_MILLIS, TimeUnit.MILLISECONDS);
-
-            if (!locked) {
-                throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::info,
-                        Map.of("roomTypeId", response.roomTypeId(), "stayDays", stayDays));
-            }
-
-            roomTypeStockService.reserve(roomType, stayDays, response.quantity());
-            reservationService.confirmReservation(userId, response);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::warn,
-                    Map.of("roomTypeId", response.roomTypeId(), "stayDays", stayDays), e);
-        } finally {
-            if (locked) {
-                try {
-                    lock.unlock();
-                } catch (Exception e) {
-                    log.warn("Failed to unlock reservation confirm lock. roomTypeId={}, stayDays={}", response.roomTypeId(), stayDays, e);
-                }
-            }
-        }
-    }
-
-    /**
-     * 가계약 취소 처리
-     */
-    public void cancelReservationHold(String holdId, Long userId) {
-        // todo: 가계약 취소 구현 필요 (락 처리가 필요한지 등)
-        reservationHoldService.cancelReservationHold(holdId, userId);
     }
 
     private List<LocalDate> getStayDays(LocalDate checkIn, LocalDate checkOut) {

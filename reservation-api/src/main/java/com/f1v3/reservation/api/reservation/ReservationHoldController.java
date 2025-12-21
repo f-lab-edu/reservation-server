@@ -6,7 +6,10 @@ import com.f1v3.reservation.auth.web.user.Login;
 import com.f1v3.reservation.auth.web.user.LoginUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 임시 예약 API
@@ -27,21 +30,4 @@ public class ReservationHoldController {
     ) {
         return reservationHoldFacade.createReservationHold(user.id(), request);
     }
-
-    @PostMapping("/{holdId}/confirm")
-    public void confirmHold(
-            @PathVariable String holdId,
-            @Login LoginUser user
-    ) {
-        reservationHoldFacade.confirmReservationHold(holdId, user.id());
-    }
-
-    @DeleteMapping("/{holdId}")
-    public void cancelHold(
-            @PathVariable String holdId,
-            @Login LoginUser user
-    ) {
-        reservationHoldFacade.cancelReservationHold(holdId, user.id());
-    }
-
 }
