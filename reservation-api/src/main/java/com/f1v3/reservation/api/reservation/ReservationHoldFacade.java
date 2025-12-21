@@ -70,7 +70,7 @@ public class ReservationHoldFacade {
 
         try {
             // 4. MultiLock 획득 시도 (대기 시간, 단위 설정 및 watchdog 활용을 통해 동적 TTL 관리)
-            locked = lock.tryLock(LOCK_WAIT_MILLIS, TimeUnit.MINUTES);
+            locked = lock.tryLock(LOCK_WAIT_MILLIS, TimeUnit.MILLISECONDS);
 
             if (!locked) {
                 throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::info);
