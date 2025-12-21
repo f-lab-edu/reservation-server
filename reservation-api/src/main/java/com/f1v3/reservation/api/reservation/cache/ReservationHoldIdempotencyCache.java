@@ -19,7 +19,7 @@ import static com.f1v3.reservation.common.redis.RedisKey.HOLD_IDEMPOTENT_FORMAT;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ReservationHoldIdempotentCache {
+public class ReservationHoldIdempotencyCache {
 
     private final RedisRepository redisRepository;
 
