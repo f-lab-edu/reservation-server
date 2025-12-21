@@ -2,7 +2,7 @@ package com.f1v3.reservation.api.reservation;
 
 import com.f1v3.reservation.api.reservation.cache.ReservationHoldCache;
 import com.f1v3.reservation.api.reservation.cache.ReservationHoldCountCache;
-import com.f1v3.reservation.api.reservation.cache.ReservationHoldIdempotentCache;
+import com.f1v3.reservation.api.reservation.cache.ReservationHoldIdempotencyCache;
 import com.f1v3.reservation.api.reservation.cache.ReservationHoldIndexCache;
 import com.f1v3.reservation.api.reservation.dto.ConfirmReservationHoldResponse;
 import com.f1v3.reservation.api.reservation.dto.CreateReservationHoldRequest;
@@ -34,11 +34,12 @@ import static com.f1v3.reservation.common.api.error.ErrorCode.*;
 @RequiredArgsConstructor
 public class ReservationHoldService {
 
-    private static final Duration HOLD_EXPIRE_MINUTES = Duration.ofMinutes(10);
+    //    private static final Duration HOLD_EXPIRE_MINUTES = Duration.ofMinutes(10);
+    private static final Duration HOLD_EXPIRE_MINUTES = Duration.ofMinutes(1);
 
     private final ReservationHoldCache holdCache;
     private final ReservationHoldIndexCache indexCache;
-    private final ReservationHoldIdempotentCache idempotentCache;
+    private final ReservationHoldIdempotencyCache idempotencyCache;
     private final ReservationHoldCountCache countCache;
 
     /**
@@ -63,19 +64,19 @@ public class ReservationHoldService {
                 checkIn,
                 checkOut,
                 userId,
-                request.idempotentKey(),
+                request.idempotencyKey(),
                 now,
                 expiredAt
         );
 
         // 3. 멱등키 확인 (중복 요청 방지)
-        ensureIdempotentKeyAvailable(request.idempotentKey(), roomType.getId(), checkIn, checkOut, holdId);
+        checkIdempotencyKeyAvailable(request.idempotencyKey(), roomType.getId(), checkIn, checkOut, holdId);
 
         // fixme: 하나의 Lua Script로 처리하여 라운드 트립을 1회로 만들기
         //  (장애 발생시 정합성을 보장하는 방안을 고려해야 함.)
         holdCache.save(hold, HOLD_EXPIRE_MINUTES);
         indexCache.save(userId, roomType.getId(), checkIn, checkOut, holdId, HOLD_EXPIRE_MINUTES);
-        idempotentCache.save(request.idempotentKey(), holdId, roomType.getId(), checkIn, checkOut, HOLD_EXPIRE_MINUTES);
+        idempotencyCache.save(request.idempotencyKey(), holdId, roomType.getId(), checkIn, checkOut, HOLD_EXPIRE_MINUTES);
         stayDays.forEach(day -> countCache.increment(roomType.getId(), day, HOLD_EXPIRE_MINUTES));
 
         return new ReservationHoldResponse(holdId, expiredAt);
@@ -92,17 +93,6 @@ public class ReservationHoldService {
         deleteAllKeys(hold);
 
         return new ConfirmReservationHoldResponse(holdId, hold.roomTypeId(), hold.checkIn(), hold.checkOut(), 1);
-    }
-
-    public void cancelReservationHold(String holdId, Long userId) {
-        ReservationHold hold = getCacheOrThrowIfProcessed(holdId);
-        validateHold(hold, userId);
-        ensureHoldNotProcessed(hold);
-
-        stayDays(hold.checkIn(), hold.checkOut())
-                .forEach(day -> countCache.decrement(hold.roomTypeId(), day, HOLD_EXPIRE_MINUTES));
-
-        deleteAllKeys(hold);
     }
 
     public Map<LocalDate, Long> getHoldCounts(Long roomTypeId, List<LocalDate> stayDays) {
@@ -156,31 +146,30 @@ public class ReservationHoldService {
         }
     }
 
-    private void ensureIdempotentKeyAvailable(String idempotentKey, Long roomTypeId, LocalDate checkIn, LocalDate checkOut, String holdId) {
+    private void checkIdempotencyKeyAvailable(String key, Long roomTypeId, LocalDate checkIn, LocalDate checkOut, String holdId) {
 
         // 1. 멱등 키가 없으면 저장하고 종료
-        if (idempotentCache.setIfAbsent(idempotentKey, roomTypeId, checkIn, checkOut, holdId, HOLD_EXPIRE_MINUTES)) {
+        if (idempotencyCache.setIfAbsent(key, roomTypeId, checkIn, checkOut, holdId, HOLD_EXPIRE_MINUTES)) {
             return;
         }
 
-        // 2. 멱등 키가 있으면 기존 가계약 확인
-        idempotentCache.find(idempotentKey, roomTypeId, checkIn, checkOut)
-                .ifPresentOrElse(existingHoldId -> holdCache.find(existingHoldId)
-                                .ifPresentOrElse(existingHold -> {
-                                            throw new ReservationException(RESERVATION_HOLD_KEY_CONFLICT, log::info);
-                                        },
-                                        () -> {
-                                            idempotentCache.delete(idempotentKey, roomTypeId, checkIn, checkOut);
-                                            throw new ReservationException(RESERVATION_HOLD_NOT_FOUND, log::info);
-                                        }
-                                ),
-                        () -> {
-                            idempotentCache.delete(idempotentKey, roomTypeId, checkIn, checkOut);
-                            throw new ReservationException(RESERVATION_HOLD_NOT_FOUND, log::info);
-                        }
-                );
-    }
+        // 2. 이미 멱등키가 존재하는 경우: (멱등키 -> holdId) 매핑 정합성 확인
+        String existingHoldId = idempotencyCache.find(key, roomTypeId, checkIn, checkOut)
+                .orElseGet(() -> {
+                    // 멱등키는 있는데 holdId가 없는 경우: 캐시 정합성 문제로 간주하고 멱등키 삭제 후 예외 발생
+                    idempotencyCache.delete(key, roomTypeId, checkIn, checkOut);
+                    throw new ReservationException(RESERVATION_HOLD_NOT_FOUND, log::info);
+                });
 
+        // 3. 멱등키가 가리키는 holdId가 존재하는 경우: 중복 요청 처리 (예외?)
+        if (holdCache.find(existingHoldId).isPresent()) {
+            throw new ReservationException(RESERVATION_HOLD_KEY_CONFLICT, log::info);
+        }
+
+        // 4. 멱등키는 있는데 holdId가 없는 경우: 캐시 정합성 문제로 간주하고 멱등키 삭제 후 예외 발생
+        idempotencyCache.delete(key, roomTypeId, checkIn, checkOut);
+        throw new ReservationException(RESERVATION_HOLD_NOT_FOUND, log::info);
+    }
     private void cleanupHoldCounts(ReservationHold hold) {
         stayDays(hold.checkIn(), hold.checkOut())
                 .forEach(day -> countCache.delete(hold.roomTypeId(), day));
@@ -189,7 +178,7 @@ public class ReservationHoldService {
     private void deleteAllKeys(ReservationHold hold) {
         holdCache.delete(hold.holdId());
         indexCache.delete(hold.userId(), hold.roomTypeId(), hold.checkIn(), hold.checkOut());
-        idempotentCache.delete(hold.idempotentKey(), hold.roomTypeId(), hold.checkIn(), hold.checkOut());
+        idempotencyCache.delete(hold.idempotencyKey(), hold.roomTypeId(), hold.checkIn(), hold.checkOut());
     }
 
     private List<LocalDate> stayDays(LocalDate checkIn, LocalDate checkOut) {
