@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import static com.f1v3.reservation.common.api.error.ErrorCode.*;
 
 /**
- * 임시 예약 퍼사드 레이어
+ * 가계약 퍼사드 레이어
  *
  * @author Seungjo, Jeong
  */
@@ -33,7 +33,6 @@ import static com.f1v3.reservation.common.api.error.ErrorCode.*;
 public class ReservationHoldFacade {
 
     private static final long LOCK_WAIT_MILLIS = 3_000L;
-    private static final long LOCK_LEASE_MILLIS = 10_000L;
     private static final String LOCK_KEY_FORMAT = "lock:room-type:%d:date:%s";
 
     private final ReservationHoldService reservationHoldService;
@@ -70,8 +69,8 @@ public class ReservationHoldFacade {
         boolean locked = false;
 
         try {
-            // 4. MultiLock 획득 시도 (대기 시간, 보유 시간, 단위 설정)
-            locked = lock.tryLock(LOCK_WAIT_MILLIS, LOCK_LEASE_MILLIS, TimeUnit.MILLISECONDS);
+            // 4. MultiLock 획득 시도 (대기 시간, 단위 설정 및 watchdog 활용을 통해 동적 TTL 관리)
+            locked = lock.tryLock(LOCK_WAIT_MILLIS, TimeUnit.MINUTES);
 
             if (!locked) {
                 throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::info);
@@ -120,7 +119,7 @@ public class ReservationHoldFacade {
 
         boolean locked = false;
         try {
-            locked = lock.tryLock(LOCK_WAIT_MILLIS, LOCK_LEASE_MILLIS, TimeUnit.MILLISECONDS);
+            locked = lock.tryLock(LOCK_WAIT_MILLIS, TimeUnit.MILLISECONDS);
 
             if (!locked) {
                 throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::info,
