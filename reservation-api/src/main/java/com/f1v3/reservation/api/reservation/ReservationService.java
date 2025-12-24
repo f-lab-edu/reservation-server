@@ -6,6 +6,7 @@ import com.f1v3.reservation.common.domain.reservation.Reservation;
 import com.f1v3.reservation.common.domain.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -32,6 +33,7 @@ public class ReservationService {
                 .toList();
     }
 
+    @Transactional
     public void confirmReservation(Long userId, ConfirmReservationHoldResponse response) {
         for (int i = 0; i < response.quantity(); i++) {
             Reservation reservation = Reservation.builder()

@@ -191,16 +191,13 @@ CREATE TABLE reservation_holds
 -- 객실 타입 재고(일자별)
 CREATE TABLE room_type_stocks
 (
-    room_type_id       BIGINT NOT NULL,
-    target_date        DATE   NOT NULL,
-    total_quantity     INT    NOT NULL,
-    available_quantity INT    NOT NULL,
-    created_at         DATETIME DEFAULT NOW(),
-    updated_at         DATETIME DEFAULT NOW() ON UPDATE NOW(),
+    room_type_id   BIGINT NOT NULL,
+    target_date    DATE   NOT NULL,
+    total_quantity INT    NOT NULL,
+    reserved_count INT    NOT NULL,
+    created_at     DATETIME DEFAULT NOW(),
+    updated_at     DATETIME DEFAULT NOW() ON UPDATE NOW(),
 
     PRIMARY KEY (room_type_id, target_date)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
-
-desc reservations;
-
