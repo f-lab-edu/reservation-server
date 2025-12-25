@@ -31,7 +31,8 @@ import static com.f1v3.reservation.common.api.error.ErrorCode.*;
 @RequiredArgsConstructor
 public class ReservationHoldFacade {
 
-    private static final long LOCK_WAIT_MILLIS = 3_000L;
+    private static final long LOCK_WAIT_MILLIS = 5_000L;
+    private static final long LOCK_LEASE_MILLIS = 3_000L;
     private static final String LOCK_KEY_FORMAT = "lock:room-type:%d:date:%s";
 
     private final ReservationHoldService reservationHoldService;
@@ -47,6 +48,7 @@ public class ReservationHoldFacade {
      * 3. ReservationHold 생성 및 만료 시각 설정
      */
     public ReservationHoldResponse createReservationHold(Long userId, CreateReservationHoldRequest request) {
+
 
         validateDate(request.checkIn(), request.checkOut());
 
@@ -66,10 +68,11 @@ public class ReservationHoldFacade {
                 .toArray(RLock[]::new));
 
         boolean locked = false;
+        long startTime = System.currentTimeMillis();
 
         try {
-            // 4. MultiLock 획득 시도 (대기 시간, 단위 설정 및 watchdog 활용을 통해 동적 TTL 관리)
-            locked = lock.tryLock(LOCK_WAIT_MILLIS, TimeUnit.MILLISECONDS);
+            // 4. MultiLock 획득 시도
+            locked = lock.tryLock(LOCK_WAIT_MILLIS, LOCK_LEASE_MILLIS, TimeUnit.MILLISECONDS);
 
             if (!locked) {
                 throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::info);
@@ -83,20 +86,31 @@ public class ReservationHoldFacade {
             return reservationHoldService.createHold(userId, roomType, request);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            Map<String, Object> parameters = new HashMap<>();
-            parameters.put("roomTypeId", request.roomTypeId());
-            parameters.put("stayDays", stayDays);
+            Map<String, Object> parameters = Map.of("roomTypeId", request.roomTypeId(), "stayDays", stayDays);
             throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::warn, parameters, e);
         } finally {
-            if (locked) {
+            checkLockTime(startTime);
+            if (locked && lock.isHeldByCurrentThread()) {
                 try {
                     lock.unlock();
                 } catch (Exception e) {
-                    log.warn("Failed to unlock reservation hold lock. roomTypeId={}, stayDays={}", request.roomTypeId(), stayDays, e);
+                    log.warn("락 해제를 실패했습니다. roomTypeId={}, stayDays={}", request.roomTypeId(), stayDays, e);
                 }
             }
         }
     }
+
+    /**
+     * 락 보유 시간 모니터링을 위한 메서드
+     */
+    private void checkLockTime(long holdStartTime) {
+        // todo: 모니터링 시스템 연동 필요
+        long elapsedTime = System.currentTimeMillis() - holdStartTime;
+        if (elapsedTime > LOCK_LEASE_MILLIS) {
+            log.warn("가계약 처리 시간이 락 보유 시간을 초과했습니다. elapsedTime = {}ms, lockLeaseTime = {}ms", elapsedTime, LOCK_LEASE_MILLIS);
+        }
+    }
+
 
     private List<LocalDate> getStayDays(LocalDate checkIn, LocalDate checkOut) {
         return checkIn.datesUntil(checkOut).toList();
@@ -108,10 +122,14 @@ public class ReservationHoldFacade {
 
     private void validateDate(LocalDate checkIn, LocalDate checkOut) {
         // todo: 최대 예약일 제한 추가해야 함. (락의 범위가 너무 커져 성능 저하 우려)
-
         if (!checkIn.isBefore(checkOut)) {
             Map<String, Object> parameters = Map.of("checkIn", checkIn, "checkOut", checkOut);
             throw new ReservationException(INVALID_REQUEST_PARAMETER, log::info, parameters);
+        }
+
+        if (checkIn.plusDays(30).isAfter(checkOut)) {
+            Map<String, Object> parameters = Map.of("checkIn", checkIn, "checkOut", checkOut);
+            throw new ReservationException(RESERVATION_MAX_STAY_EXCEEDED, log::info, parameters);
         }
     }
 
