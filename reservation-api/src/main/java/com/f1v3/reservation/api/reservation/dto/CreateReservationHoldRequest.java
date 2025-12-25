@@ -25,8 +25,8 @@ public record CreateReservationHoldRequest(
         @Min(value = 1, message = "최소 1명 이상의 예약 인원을 입력해주세요.")
         Integer capacity,
 
-        @NotNull(message = "멱등 키를 입력해주세요.")
-        @Pattern(regexp = "^[0-9a-fA-F-]{36}$", message = "유효한 멱등 키(UUID) 형식이 아닙니다.")
-        String idempotencyKey
+        @NotNull(message = "요청 키를 입력해주세요.")
+        @Pattern(regexp = "^[0-9a-fA-F-]{36}$", message = "유효한 요청 키(UUID) 형식이 아닙니다.")
+        String holdRequestKey
 ) {
 }
