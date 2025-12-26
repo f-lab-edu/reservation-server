@@ -5,6 +5,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.time.Duration;
+import java.util.List;
 
 /**
  * Redis 레포지토리 클래스
@@ -23,6 +24,10 @@ public class RedisRepository {
 
     public Boolean setIfAbsent(String key, String value, Duration timeout) {
         return redisTemplate.opsForValue().setIfAbsent(key, value, timeout);
+    }
+
+    public List<String> getMultiValues(List<String> keys) {
+        return redisTemplate.opsForValue().multiGet(keys);
     }
 
     public String getValue(String key) {

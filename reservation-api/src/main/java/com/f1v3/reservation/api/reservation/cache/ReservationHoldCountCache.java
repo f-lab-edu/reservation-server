@@ -7,6 +7,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 가계약 보유 카운트 캐시
@@ -60,5 +63,19 @@ public class ReservationHoldCountCache {
 
     private String countKey(Long roomTypeId, LocalDate day) {
         return String.format(com.f1v3.reservation.common.redis.RedisKey.HOLD_COUNT_FORMAT, roomTypeId, day);
+    }
+
+    public Map<LocalDate, Long> getCounts(Long roomTypeId, List<LocalDate> stayDays) {
+        List<String> keys = stayDays.stream()
+                .map(day -> countKey(roomTypeId, day))
+                .toList();
+        List<String> values = redisRepository.getMultiValues(keys);
+
+        Map<LocalDate, Long> counts = HashMap.newHashMap(stayDays.size());
+        for (int i = 0; i < stayDays.size(); i++) {
+            String count = values.get(i);
+            counts.put(stayDays.get(i), Long.parseLong(count));
+        }
+        return counts;
     }
 }
