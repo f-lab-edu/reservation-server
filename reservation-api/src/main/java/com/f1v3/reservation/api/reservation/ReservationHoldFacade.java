@@ -39,7 +39,6 @@ public class ReservationHoldFacade {
     private final RoomTypeStockService roomTypeStockService;
     private final RoomTypeRepository roomTypeRepository;
     private final RedissonClient redissonClient;
-    private final ReservationService reservationService;
 
     /**
      * 가계약 생성 요청
@@ -48,8 +47,6 @@ public class ReservationHoldFacade {
      * 3. ReservationHold 생성 및 만료 시각 설정
      */
     public ReservationHoldResponse createReservationHold(Long userId, CreateReservationHoldRequest request) {
-
-
         validateDate(request.checkIn(), request.checkOut());
 
         // 1. 객실 타입 조회
@@ -68,7 +65,7 @@ public class ReservationHoldFacade {
                 .toArray(RLock[]::new));
 
         boolean locked = false;
-        long startTime = System.currentTimeMillis();
+        long lockAcquiredAt = 0L;
 
         try {
             // 4. MultiLock 획득 시도
@@ -77,19 +74,27 @@ public class ReservationHoldFacade {
             if (!locked) {
                 throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::info);
             }
+            lockAcquiredAt = System.currentTimeMillis();
 
             // 5. 객실 재고 확보 및 검증(reservedCount 기준, holdCount는 별도 계산 예정)
             List<RoomTypeStock> stocks = roomTypeStockService.ensureStocks(roomType, stayDays);
             validateAvailability(request, stayDays, stocks);
 
             // 6. 임시 예약 생성 후 레디스에 저장
-            return reservationHoldService.createHold(userId, roomType, request);
+            ReservationHoldResponse response = reservationHoldService.createHold(userId, roomType, request);
+
+            // 7. 만약 비즈니스 로직 수행 중 락이 해제되는 경우 롤백 처리
+            if (isLeaseTimeExceeded(lockAcquiredAt)) {
+                cleanupAfterLeaseTimeExceeded(response, lock);
+                throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::warn);
+            }
+
+            return response;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             Map<String, Object> parameters = Map.of("roomTypeId", request.roomTypeId(), "stayDays", stayDays);
             throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::warn, parameters, e);
         } finally {
-            checkLockTime(startTime);
             if (locked && lock.isHeldByCurrentThread()) {
                 try {
                     lock.unlock();
@@ -100,17 +105,21 @@ public class ReservationHoldFacade {
         }
     }
 
-    /**
-     * 락 보유 시간 모니터링을 위한 메서드
-     */
-    private void checkLockTime(long holdStartTime) {
-        // todo: 모니터링 시스템 연동 필요
-        long elapsedTime = System.currentTimeMillis() - holdStartTime;
-        if (elapsedTime > LOCK_LEASE_MILLIS) {
-            log.warn("가계약 처리 시간이 락 보유 시간을 초과했습니다. elapsedTime = {}ms, lockLeaseTime = {}ms", elapsedTime, LOCK_LEASE_MILLIS);
+    private boolean isLeaseTimeExceeded(long lockAcquiredAt) {
+        if (lockAcquiredAt <= 0) {
+            return false;
         }
+        return System.currentTimeMillis() - lockAcquiredAt > LOCK_LEASE_MILLIS;
     }
 
+    private void cleanupAfterLeaseTimeExceeded(ReservationHoldResponse response, RLock lock) {
+
+        if (!lock.isHeldByCurrentThread()) {
+            log.warn("락 만료로 가계약 정리를 시도했으나 현재 스레드가 락을 보유하지 않습니다. holdId={}", response.holdId());
+        }
+
+        reservationHoldService.cleanup(response.holdId());
+    }
 
     private List<LocalDate> getStayDays(LocalDate checkIn, LocalDate checkOut) {
         return checkIn.datesUntil(checkOut).toList();
