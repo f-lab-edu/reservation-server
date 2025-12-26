@@ -136,7 +136,7 @@ public class ReservationHoldFacade {
             throw new ReservationException(INVALID_REQUEST_PARAMETER, log::info, parameters);
         }
 
-        if (checkIn.plusDays(30).isAfter(checkOut)) {
+        if (checkOut.minusDays(30).isAfter(checkIn)) {
             Map<String, Object> parameters = Map.of("checkIn", checkIn, "checkOut", checkOut);
             throw new ReservationException(RESERVATION_MAX_STAY_EXCEEDED, log::info, parameters);
         }
