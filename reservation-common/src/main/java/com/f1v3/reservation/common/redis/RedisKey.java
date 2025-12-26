@@ -13,7 +13,7 @@ public final class RedisKey {
      */
     public static final String HOLD_KEY_FORMAT = "reservation:hold:%s";
     public static final String HOLD_IDX_FORMAT = "reservation:hold:idx:%d:%d:%s:%s";
-    public static final String HOLD_IDEMPOTENT_FORMAT = "reservation:hold:idempotent:%s:%d:%s:%s";
+    public static final String HOLD_REQUEST_KEY_FORMAT = "reservation:hold:request-key:%s:%d:%s:%s";
     public static final String HOLD_COUNT_FORMAT = "reservation:hold:count:%d:%s";
 
     /**

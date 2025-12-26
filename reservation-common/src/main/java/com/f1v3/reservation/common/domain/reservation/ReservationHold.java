@@ -14,7 +14,7 @@ public record ReservationHold(
         LocalDate checkIn,
         LocalDate checkOut,
         Long userId,
-        String idempotentKey,
+        String holdRequestKey,
         LocalDateTime createdAt,
         LocalDateTime expiredAt
 ) {

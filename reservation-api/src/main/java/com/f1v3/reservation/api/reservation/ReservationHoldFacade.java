@@ -31,14 +31,14 @@ import static com.f1v3.reservation.common.api.error.ErrorCode.*;
 @RequiredArgsConstructor
 public class ReservationHoldFacade {
 
-    private static final long LOCK_WAIT_MILLIS = 3_000L;
+    private static final long LOCK_WAIT_MILLIS = 5_000L;
+    private static final long LOCK_LEASE_MILLIS = 3_000L;
     private static final String LOCK_KEY_FORMAT = "lock:room-type:%d:date:%s";
 
     private final ReservationHoldService reservationHoldService;
     private final RoomTypeStockService roomTypeStockService;
     private final RoomTypeRepository roomTypeRepository;
     private final RedissonClient redissonClient;
-    private final ReservationService reservationService;
 
     /**
      * 가계약 생성 요청
@@ -47,7 +47,6 @@ public class ReservationHoldFacade {
      * 3. ReservationHold 생성 및 만료 시각 설정
      */
     public ReservationHoldResponse createReservationHold(Long userId, CreateReservationHoldRequest request) {
-
         validateDate(request.checkIn(), request.checkOut());
 
         // 1. 객실 타입 조회
@@ -66,36 +65,60 @@ public class ReservationHoldFacade {
                 .toArray(RLock[]::new));
 
         boolean locked = false;
+        long lockAcquiredAt = 0L;
 
         try {
-            // 4. MultiLock 획득 시도 (대기 시간, 단위 설정 및 watchdog 활용을 통해 동적 TTL 관리)
-            locked = lock.tryLock(LOCK_WAIT_MILLIS, TimeUnit.MILLISECONDS);
+            // 4. MultiLock 획득 시도
+            locked = lock.tryLock(LOCK_WAIT_MILLIS, LOCK_LEASE_MILLIS, TimeUnit.MILLISECONDS);
 
             if (!locked) {
                 throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::info);
             }
+            lockAcquiredAt = System.currentTimeMillis();
 
             // 5. 객실 재고 확보 및 검증(reservedCount 기준, holdCount는 별도 계산 예정)
             List<RoomTypeStock> stocks = roomTypeStockService.ensureStocks(roomType, stayDays);
             validateAvailability(request, stayDays, stocks);
 
             // 6. 임시 예약 생성 후 레디스에 저장
-            return reservationHoldService.createHold(userId, roomType, request);
+            ReservationHoldResponse response = reservationHoldService.createHold(userId, roomType, request);
+
+            // 7. 만약 비즈니스 로직 수행 중 락이 해제되는 경우 롤백 처리
+            if (isLeaseTimeExceeded(lockAcquiredAt)) {
+                cleanupAfterLeaseTimeExceeded(response, lock);
+                throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::warn);
+            }
+
+            return response;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            Map<String, Object> parameters = new HashMap<>();
-            parameters.put("roomTypeId", request.roomTypeId());
-            parameters.put("stayDays", stayDays);
+            Map<String, Object> parameters = Map.of("roomTypeId", request.roomTypeId(), "stayDays", stayDays);
             throw new ReservationException(RESERVATION_LOCK_TIMEOUT, log::warn, parameters, e);
         } finally {
-            if (locked) {
+            if (locked && lock.isHeldByCurrentThread()) {
                 try {
                     lock.unlock();
                 } catch (Exception e) {
-                    log.warn("Failed to unlock reservation hold lock. roomTypeId={}, stayDays={}", request.roomTypeId(), stayDays, e);
+                    log.warn("락 해제를 실패했습니다. roomTypeId={}, stayDays={}", request.roomTypeId(), stayDays, e);
                 }
             }
         }
+    }
+
+    private boolean isLeaseTimeExceeded(long lockAcquiredAt) {
+        if (lockAcquiredAt <= 0) {
+            return false;
+        }
+        return System.currentTimeMillis() - lockAcquiredAt > LOCK_LEASE_MILLIS;
+    }
+
+    private void cleanupAfterLeaseTimeExceeded(ReservationHoldResponse response, RLock lock) {
+
+        if (!lock.isHeldByCurrentThread()) {
+            log.warn("락 만료로 가계약 정리를 시도했으나 현재 스레드가 락을 보유하지 않습니다. holdId={}", response.holdId());
+        }
+
+        reservationHoldService.cleanup(response.holdId());
     }
 
     private List<LocalDate> getStayDays(LocalDate checkIn, LocalDate checkOut) {
@@ -108,10 +131,14 @@ public class ReservationHoldFacade {
 
     private void validateDate(LocalDate checkIn, LocalDate checkOut) {
         // todo: 최대 예약일 제한 추가해야 함. (락의 범위가 너무 커져 성능 저하 우려)
-
         if (!checkIn.isBefore(checkOut)) {
             Map<String, Object> parameters = Map.of("checkIn", checkIn, "checkOut", checkOut);
             throw new ReservationException(INVALID_REQUEST_PARAMETER, log::info, parameters);
+        }
+
+        if (checkOut.minusDays(30).isAfter(checkIn)) {
+            Map<String, Object> parameters = Map.of("checkIn", checkIn, "checkOut", checkOut);
+            throw new ReservationException(RESERVATION_MAX_STAY_EXCEEDED, log::info, parameters);
         }
     }
 
