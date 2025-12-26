@@ -73,8 +73,9 @@ public class ReservationHoldCountCache {
 
         Map<LocalDate, Long> counts = HashMap.newHashMap(stayDays.size());
         for (int i = 0; i < stayDays.size(); i++) {
-            String count = values.get(i);
-            counts.put(stayDays.get(i), Long.parseLong(count));
+            String value = values.get(i);
+            long count = value == null ? 0L : Long.parseLong(value);
+            counts.put(stayDays.get(i), count);
         }
         return counts;
     }
